@@ -10,6 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Kismet/GameplayStatics.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -57,6 +58,36 @@ ASotugyouSeisakuCharacter::ASotugyouSeisakuCharacter()
 //////////////////////////////////////////////////////////////////////////
 // Input
 
+void ASotugyouSeisakuCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	PrevLocation = GetActorLocation();
+}
+
+void ASotugyouSeisakuCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	CheckForGimmick();
+
+	//プレイヤーとブロックの動きを連動させる
+	if (bIsPushing && mTargetBlock)
+	{
+		//プレイヤーの１フレームの移動量を取得
+		FVector DeltaMove = GetActorLocation() - PrevLocation;
+		DeltaMove.Z = 0.f;
+
+		//ブロックに移動量を渡す
+		if (!DeltaMove.IsNearlyZero())//移動量が微小なら無視
+		{
+			UE_LOG(LogTemp, Warning, TEXT("DeltaMove: %s"), *DeltaMove.ToString());
+			mTargetBlock->MoveWithPlayer(DeltaMove);
+		}
+	}
+
+	PrevLocation = GetActorLocation();
+}
+
 void ASotugyouSeisakuCharacter::NotifyControllerChanged()
 {
 	Super::NotifyControllerChanged();
@@ -85,6 +116,10 @@ void ASotugyouSeisakuCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ASotugyouSeisakuCharacter::Look);
+
+		//ブロックを押す/終了
+		EnhancedInputComponent->BindAction(mPushAction, ETriggerEvent::Triggered, this, &ASotugyouSeisakuCharacter::StartPush);
+		EnhancedInputComponent->BindAction(mPushAction, ETriggerEvent::Completed, this, &ASotugyouSeisakuCharacter::StopPush);
 	}
 	else
 	{
@@ -125,5 +160,51 @@ void ASotugyouSeisakuCharacter::Look(const FInputActionValue& Value)
 		// add yaw and pitch input to controller
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+/// @brief ギミックを検出する関数
+void ASotugyouSeisakuCharacter::CheckForGimmick()
+{
+	//カメラ or プレイヤーの前方にレイを飛ばして判定
+	FVector Start = GetActorLocation();
+	FVector End = Start + GetActorForwardVector() * mPushDistance;
+
+	FHitResult Hit;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+	{
+		mTargetBlock = Cast<AGimmick_PushBlock>(Hit.GetActor());
+		//UE_LOG(LogTemp, Error, TEXT("Target Block Detected: %s"), *GetNameSafe(mTargetBlock));
+	}
+	else
+	{
+		mTargetBlock = nullptr;
+	}
+}
+
+/// @brief Fキーを押してブロックを押す関数
+void ASotugyouSeisakuCharacter::StartPush()
+{
+	if (mTargetBlock)
+	{
+		bIsPushing = true;
+		mTargetBlock->StartPushing(this);
+
+		//押すアニメーションを再生（例）
+		//PlayAnimMontage(PushAnimMontage);
+	}
+}
+
+/// @brief ブロックを押すのをやめる関数
+void ASotugyouSeisakuCharacter::StopPush()
+{
+	bIsPushing = false;
+
+	if (mTargetBlock)
+	{
+		mTargetBlock->StopPushing();
 	}
 }

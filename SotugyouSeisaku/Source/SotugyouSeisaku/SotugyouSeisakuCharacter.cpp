@@ -195,6 +195,7 @@ void ASotugyouSeisakuCharacter::StartPush()
 		//押している間は移動速度を下げる（重い感じを出す）
 		if (UCharacterMovementComponent* Movement = GetCharacterMovement())
 		{
+			PlayAnimMontage(PushAnimMontage);
 			Movement->MaxWalkSpeed = 200.f;//通常500→200に減速
 		}
 	}

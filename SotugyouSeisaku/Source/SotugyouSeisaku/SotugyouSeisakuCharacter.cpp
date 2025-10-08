@@ -183,6 +183,13 @@ void ASotugyouSeisakuCharacter::StartPush()
 {
 	if (mTargetBlock)
 	{
+		//押せる位置にいるかチェック
+		if (!mTargetBlock->CanBePushedByPlayer(GetActorLocation()))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Cannot push from this side!"));
+			return;
+		}
+
 		bIsPushing = true;
 		mTargetBlock->StartPushing(this);
 

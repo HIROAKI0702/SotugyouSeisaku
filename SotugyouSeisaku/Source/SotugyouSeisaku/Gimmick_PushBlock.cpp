@@ -17,14 +17,14 @@ AGimmick_PushBlock::AGimmick_PushBlock()
 	mMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("mMesh"));
 	RootComponent = mMesh;
 
-	mMesh->SetSimulatePhysics(false);//手動で動かす
+	mMesh->SetSimulatePhysics(true);//手動で動かす
 
 	//コリジョン設定
-	mMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	mMesh->SetCollisionObjectType(ECC_WorldDynamic);
-	mMesh->SetCollisionResponseToAllChannels(ECR_Block);
+	//mMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	//mMesh->SetCollisionObjectType(ECC_WorldDynamic);
+	//mMesh->SetCollisionResponseToAllChannels(ECR_Block);
 
-	mMesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
+	//mMesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
 
 	//プレイヤー（Pawn）とは重なるように設定
 	mMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);

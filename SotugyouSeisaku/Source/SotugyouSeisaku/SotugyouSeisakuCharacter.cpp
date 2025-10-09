@@ -75,10 +75,7 @@ void ASotugyouSeisakuCharacter::Tick(float DeltaTime)
 		//ブロックに移動量を渡す
 		if (!DeltaMove.IsNearlyZero(0.001f))
 		{
-			//移動量を1.2倍に増幅
-			FVector AmplifiedMove = DeltaMove * 1.2f;
-
-			mTargetBlock->MoveWithPlayer(AmplifiedMove);
+			mTargetBlock->MoveWithPlayer(DeltaMove);
 		}
 	}
 
@@ -202,7 +199,7 @@ void ASotugyouSeisakuCharacter::StartPush()
 		//押している間は移動速度を下げる（重い感じを出す）
 		if (UCharacterMovementComponent* Movement = GetCharacterMovement())
 		{
-			PlayAnimMontage(PushAnimMontage);
+			//PlayAnimMontage(PushAnimMontage);
 			Movement->MaxWalkSpeed = 200.f;//通常500→200に減速
 		}
 	}

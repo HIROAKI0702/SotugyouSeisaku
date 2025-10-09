@@ -1,4 +1,4 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
@@ -51,6 +51,9 @@ class ASotugyouSeisakuCharacter : public ACharacter
 public:
 	ASotugyouSeisakuCharacter();
 	
+	//アニメーションブループリントから呼び出せるようにする
+	UFUNCTION(BlueprintPure, Category = "Character State")
+	bool IsPushingBlock() const { return bIsPushing; }
 
 protected:
 
@@ -86,15 +89,19 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	//押すブロック
 	UPROPERTY()
 	AGimmick_PushBlock* mTargetBlock;
 
+	//押しアニメーション
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Push")
 	UAnimMontage* PushAnimMontage;
 
+	//押している時の距離設定
 	UPROPERTY(EditAnywhere,Category="Push")
 	float mPushDistance = 150.f;
 
+	//プレイヤーがギミックブロックを押しているかどうか
 	bool bIsPushing = false;
 
 	//プレイヤーの前フレーム位置

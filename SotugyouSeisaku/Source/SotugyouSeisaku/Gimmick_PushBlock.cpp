@@ -15,9 +15,9 @@ AGimmick_PushBlock::AGimmick_PushBlock()
 	PrimaryActorTick.bCanEverTick = true;
 
 	mMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("mMesh"));
-	RootComponent = mMesh;
+	RootComponent = mRoot;
 
-	mMesh->SetSimulatePhysics(true);//手動で動かす
+	mMesh->SetSimulatePhysics(true);
 
 	//コリジョン設定
 	//mMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);

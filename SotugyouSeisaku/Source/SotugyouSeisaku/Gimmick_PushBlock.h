@@ -10,7 +10,13 @@ UCLASS()
 class SOTUGYOUSEISAKU_API AGimmick_PushBlock : public AActor
 {
 	GENERATED_BODY()
-	
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USceneComponent> mRoot;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UStaticMeshComponent> mMesh;
+
 public:	
 	// Sets default values for this actor's properties
 	AGimmick_PushBlock();
@@ -18,9 +24,6 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* mMesh;
 
 	UPROPERTY()
 	ASotugyouSeisakuCharacter* mPushingPlayer;

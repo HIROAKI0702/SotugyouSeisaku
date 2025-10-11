@@ -2,12 +2,12 @@
 
 #include "SotugyouSeisakuCharacter.h"
 #include "Engine/LocalPlayer.h"
-#include "Camera/CameraComponent.h"
+#include "Camera/CameraComponent.h"//カメラコンポーネント
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
-#include "GameFramework/SpringArmComponent.h"
+#include "GameFramework/SpringArmComponent.h"//スプリングアームコンポーネント
 #include "GameFramework/Controller.h"
-#include "EnhancedInputComponent.h"
+#include "EnhancedInputComponent.h"//入力システム
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Kismet/GameplayStatics.h"
@@ -47,17 +47,36 @@ ASotugyouSeisakuCharacter::ASotugyouSeisakuCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+	mPushDistance = 150.0f;
+	mRespawnZ = -3000.0f;
 }
 
 void ASotugyouSeisakuCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	PrevLocation = GetActorLocation();
+	PrevRotation = GetActorRotation();
+
+	//レベル内の PlayerStart を検索
+	TArray<AActor*> Starts;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), Starts);
+
+	if (Starts.Num() > 0)
+	{
+		mPlayerStart = Starts[0]; //最初の PlayerStart を使用
+	}
 }
 
 void ASotugyouSeisakuCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	//プレイヤーの位置が指定Z座標より下に行けば復活
+	if (GetActorLocation().Z < mRespawnZ)
+	{
+		RespawnPlayer();
+	}
 
 	//押していない時だけブロックを検出
 	if (!bIsPushing)
@@ -77,10 +96,18 @@ void ASotugyouSeisakuCharacter::Tick(float DeltaTime)
 		{
 			mTargetBlock->MoveWithPlayer(DeltaMove);
 		}
+
+		//プレイヤー中心での回転
+		float DeltaYaw = GetActorRotation().Yaw - PrevRotation.Yaw;
+		if (!FMath::IsNearlyZero(DeltaYaw, 0.01f))
+		{
+			mTargetBlock->RotateAroundPlayer(GetActorLocation(), DeltaYaw);
+		}
 	}
 
 	//次フレームに向けて位置を更新
 	PrevLocation = GetActorLocation();
+	PrevRotation = GetActorRotation();
 }
 
 /// @brief コントロ－ラーが変更された場合に呼ばれる
@@ -226,5 +253,23 @@ void ASotugyouSeisakuCharacter::StopPush()
 
 		mTargetBlock->StopPushing();
 		mTargetBlock = nullptr;
+	}
+}
+
+/// @brief リスポーン関数
+void ASotugyouSeisakuCharacter::RespawnPlayer()
+{
+	if (mPlayerStart)
+	{
+		//位置と向きをリセット
+		SetActorLocation(mPlayerStart->GetActorLocation());
+		SetActorRotation(mPlayerStart->GetActorRotation());
+
+		// 落下速度をリセット（物理挙動がある場合）
+		UCharacterMovementComponent* MoveComp = GetCharacterMovement();
+		if (MoveComp)
+		{
+			MoveComp->Velocity = FVector::ZeroVector;
+		}
 	}
 }

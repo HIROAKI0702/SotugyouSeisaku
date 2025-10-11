@@ -255,7 +255,7 @@ void AGimmck_MoveFloor::UpdateCircularMovement(float DeltaTime)
 void AGimmck_MoveFloor::OnFloorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	//重なったのが自分自身なら処理しない
+	//自分自身や無効なアクタは無視
 	if (OtherActor == this || !OtherActor)
 	{
 		return;
@@ -275,7 +275,7 @@ void AGimmck_MoveFloor::OnFloorBeginOverlap(UPrimitiveComponent* OverlappedCompo
 void AGimmck_MoveFloor::OnFloorEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	//重なったのが自分自身なら処理しない
+	//自分自身や無効なアクタは無視
 	if (OtherActor == this || !OtherActor)
 	{
 		return;

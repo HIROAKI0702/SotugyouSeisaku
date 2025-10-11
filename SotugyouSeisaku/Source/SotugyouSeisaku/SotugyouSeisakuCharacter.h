@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
 #include "Gimmick_PushBlock.h"
+#include "GameFramework/PlayerStart.h"
 #include "SotugyouSeisakuCharacter.generated.h"
 
 class USpringArmComponent;
@@ -89,9 +90,16 @@ public:
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
 
+	//プレイヤーを指定位置にリスポーンさせる関数
+	UFUNCTION()
+	void RespawnPlayer();
+
 	//押すブロック
 	UPROPERTY()
 	AGimmick_PushBlock* mTargetBlock;
+
+	UPROPERTY()
+	AActor* mPlayerStart;
 
 	//押しアニメーション
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Push")
@@ -99,12 +107,18 @@ public:
 
 	//押している時の距離設定
 	UPROPERTY(EditAnywhere,Category="Push")
-	float mPushDistance = 150.f;
+	float mPushDistance = 0.0f;
+
+	//リスポーンするZ座標
+	UPROPERTY(EditAnywhere, Category = "Respawn")
+	float mRespawnZ = 0.0f;
 
 	//プレイヤーがギミックブロックを押しているかどうか
 	bool bIsPushing = false;
 
 	//プレイヤーの前フレーム位置
 	FVector PrevLocation;
+	//プレイヤーの前フレーム回転値
+	FRotator  PrevRotation;
 };
 

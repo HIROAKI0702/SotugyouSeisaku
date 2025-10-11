@@ -19,13 +19,6 @@ AGimmick_PushBlock::AGimmick_PushBlock()
 
 	mMesh->SetSimulatePhysics(true);
 
-	//コリジョン設定
-	//mMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-	//mMesh->SetCollisionObjectType(ECC_WorldDynamic);
-	//mMesh->SetCollisionResponseToAllChannels(ECR_Block);
-
-	//mMesh->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Ignore);
-
 	//プレイヤー（Pawn）とは重なるように設定
 	mMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
@@ -72,13 +65,27 @@ void AGimmick_PushBlock::MoveWithPlayer(const FVector& DeltaMove)
 	//アクターをワールド座標で移動
 	FHitResult Hit;
 	AddActorWorldOffset(DeltaMove, false, &Hit);
+}
 
-	//if (Hit.bBlockingHit)
-	//{
-	//	//衝突するまでの距離だけ移動（スライディング移動）
-	//	FVector SafeMove = DeltaMove * Hit.Time;
-	//	SetActorLocation(GetActorLocation() + SafeMove);
-	//}
+/// @brief プレイヤーを中心にYaw回転させる
+/// @param PlayerCenter プレイヤーの位置
+/// @param DeltaYaw 回転量（度）
+void AGimmick_PushBlock::RotateAroundPlayer(const FVector& PlayerCenter, float DeltaYaw)
+{
+	//プレイヤー中心の相対位置を計算
+	FVector RelativePos = GetActorLocation() - PlayerCenter;
+
+	//Z軸回転クォータニオンを作成
+	FQuat RotationQuat(FVector::UpVector, FMath::DegreesToRadians(DeltaYaw));
+
+	//相対位置を回転
+	FVector RotatedPos = RotationQuat.RotateVector(RelativePos);
+
+	//新しいブロック位置 = プレイヤー位置 + 回転後の相対位置
+	SetActorLocation(PlayerCenter + RotatedPos);
+
+	//ブロック自身の回転もYaw方向に回す
+	AddActorLocalRotation(FRotator(0.f, DeltaYaw, 0.f));
 }
 
 bool AGimmick_PushBlock::CanBePushedByPlayer(const FVector& PlayerLocation)const
@@ -108,9 +115,6 @@ bool AGimmick_PushBlock::CanBePushedByPlayer(const FVector& PlayerLocation)const
 	float AngleDegrees = FMath::RadiansToDegrees(AngleRadians);
 
 	bool bCanPush = AngleDegrees <= mPushAngle;
-
-	UE_LOG(LogTemp, Log, TEXT("Push Check: Angle=%.1f°, Tolerance=%.1f°, CanPush=%s"),
-		AngleDegrees, mPushAngle, bCanPush ? TEXT("YES") : TEXT("NO"));
 
 	return bCanPush;
 }

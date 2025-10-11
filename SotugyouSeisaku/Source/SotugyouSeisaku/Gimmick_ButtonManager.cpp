@@ -3,11 +3,12 @@
 #include "Gimmick_ButtonManager.h"
 #include "Gimmick_Button.h"
 
+/// @brief コンストラクタ　ボタンマネージャーの各種設定
 AGimmick_ButtonManager::AGimmick_ButtonManager()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	mDoorMoveOffset = FVector(0.0f, 0.0f, 300.0f);
+	mDoorMoveOffset = FVector(400.0f, 0.0f, 0.0f);
 	mDoorMoveSpeed = 200.0f;
 	bResetOnFailure = true;
 	bResetAfterSuccess = false;
@@ -45,6 +46,8 @@ void AGimmick_ButtonManager::Tick(float DeltaTime)
 	}
 }
 
+/// @brief ボタンが押されたかどうかチェックする関数
+/// @param PressedButton //押されたボタンアクタ
 void AGimmick_ButtonManager::OnButtonPressed(AGimmick_Button* PressedButton)
 {
 	//すでにクリア済みの場合は何もしない
@@ -74,12 +77,15 @@ void AGimmick_ButtonManager::OnButtonPressed(AGimmick_Button* PressedButton)
 	}
 }
 
+/// @brief ボタンが離されたかチェックする関数
+/// @param ReleasedButton 離したボタンアクタ
 void AGimmick_ButtonManager::OnButtonReleased(AGimmick_Button* ReleasedButton)
 {
 	//ボタンを離してもシーケンスは継続（必要に応じて変更可能）
 	UE_LOG(LogTemp, Log, TEXT("Button released: %s"), *GetNameSafe(ReleasedButton));
 }
 
+/// @brief ボタンの順番を正解したことを通知する関数
 void AGimmick_ButtonManager::OnSequenceSuccess()
 {
 	bSequenceCompleted = true;
@@ -88,18 +94,23 @@ void AGimmick_ButtonManager::OnSequenceSuccess()
 	// 例: パーティクルエフェクト、サウンド再生など
 }
 
+/// @brief ボタンの押す順番を間違えた事を通知する関数
+/// @param WrongButton 間違えたボタンアクタ
 void AGimmick_ButtonManager::OnSequenceFailure(AGimmick_Button* WrongButton)
 {
 	int32 ExpectedIndex = mCurrentStep;
 	int32 ActualIndex = mButtonSequence.Find(WrongButton);
 }
 
+/// @brief ボタンを離した後リセットする関数
 void AGimmick_ButtonManager::ResetSequence()
 {
 	mCurrentStep = 0;
 	bSequenceCompleted = false;
 }
 
+/// @brief 正解した後、ドアを開く関数
+/// @param DeltaTime //フレーム間の経過時間
 void AGimmick_ButtonManager::MoveDoor(float DeltaTime)
 {
 	FVector CurrentPosition = mTargetDoor->GetActorLocation();

@@ -38,9 +38,13 @@ public:
 	UFUNCTION()
 	void StopPushing();
 
-	//プレイヤーに追従させる
+	//プレイヤーに位置を追従させる
 	UFUNCTION()
 	void MoveWithPlayer(const FVector& DeltaMove);
+
+	//プレイヤーを中心に回転する
+	UFUNCTION()
+	void RotateAroundPlayer(const FVector& DeltaMove, float DeltaYaw);
 
 	//プレイヤーがブロックを押せる位置にいるかチェック
 	UFUNCTION()

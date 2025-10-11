@@ -75,7 +75,7 @@ void AGimmick_Button::Tick(float DeltaTime)
 void AGimmick_Button::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	//プレイヤーかブロックが乗った場合
+	//自分自身や無効なアクタは無視
 	if (OtherActor && OtherActor != this)
 	{
 		mOverlappingActorCount++;
@@ -109,7 +109,7 @@ void AGimmick_Button::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedCompo
 void AGimmick_Button::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	//トリガーから出たのが自分じゃなければ
+	//自分自身や無効なアクタは無視
 	if (OtherActor && OtherActor != this)
 	{
 		mOverlappingActorCount--;

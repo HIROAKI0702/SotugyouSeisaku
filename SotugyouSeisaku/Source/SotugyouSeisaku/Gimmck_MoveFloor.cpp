@@ -10,9 +10,13 @@ AGimmck_MoveFloor::AGimmck_MoveFloor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	//床のメッシュを作成
+	//ルートコンポーネント作成
+	mRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	RootComponent = mRoot;
+
+	//床のメッシュ
 	mMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("FloorMesh"));
-	RootComponent = mMesh;
+	mMesh->SetupAttachment(RootComponent);
 
 	//Movableに設定
 	mMesh->SetMobility(EComponentMobility::Movable);

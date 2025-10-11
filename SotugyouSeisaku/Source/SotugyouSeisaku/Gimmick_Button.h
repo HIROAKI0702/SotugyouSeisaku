@@ -8,6 +8,8 @@
 #include "Components/BoxComponent.h"
 #include "Gimmick_Button.generated.h"
 
+class AGimmick_ButtonManager;
+
 UCLASS()
 class SOTUGYOUSEISAKU_API AGimmick_Button : public AActor
 {
@@ -45,7 +47,7 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	//コールバック関数
+	//オーバーラップイベント
 	UFUNCTION()
 	void OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -53,6 +55,12 @@ public:
 	UFUNCTION()
 	void OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	//マネージャーを設定（マネージャーから呼ばれる）
+	void SetButtonManager(AGimmick_ButtonManager* Manager) { mButtonManager = Manager; }
+
+	//ボタンが押されているか取得
+	bool IsPressed() const { return bIsPressed; }
 
 	//ブロックを移動させる
 	void MoveBlock(float DeltaTime);
@@ -81,4 +89,8 @@ public:
 
 	//現在ボタンに乗っているアクターの数
 	int32 mOverlappingActorCount = 0;
+
+	//ボタンマネージャー（複数ボタンシステム用）
+	UPROPERTY()
+	AGimmick_ButtonManager* mButtonManager = nullptr;
 };

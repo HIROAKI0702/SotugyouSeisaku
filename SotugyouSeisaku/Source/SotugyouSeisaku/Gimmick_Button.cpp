@@ -3,9 +3,12 @@
 
 #include "Gimmick_Button.h"
 #include "Components/StaticMeshComponent.h"
+#include "Gimmick_ButtonManager.h"
 #include "Gimmick_PushBlock.h"
 
 // Sets default values
+
+/// @brief コンストラクタ　ボタンの各種設定
 AGimmick_Button::AGimmick_Button()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -88,6 +91,12 @@ void AGimmick_Button::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedCompo
 				NewLocation.Z -= 10.0f;//5cm下げる
 				mMesh->SetRelativeLocation(NewLocation);
 			}
+
+			//ボタンマネージャーに通知（複数ボタンシステム）
+			if (mButtonManager)
+			{
+				mButtonManager->OnButtonPressed(this);
+			}
 		}
 	}
 }
@@ -117,6 +126,12 @@ void AGimmick_Button::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedCompone
 				FVector NewLocation = mMesh->GetRelativeLocation();
 				NewLocation.Z += 10.0f; //元に戻す
 				mMesh->SetRelativeLocation(NewLocation);
+			}
+
+			//ボタンマネージャーに通知
+			if (mButtonManager)
+			{
+				mButtonManager->OnButtonReleased(this);
 			}
 		}
 	}

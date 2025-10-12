@@ -50,6 +50,10 @@ public:
 	UFUNCTION()
 	bool CanBePushedByPlayer(const FVector& PlayerLocation) const;
 
+	//ブロックの重さを取得
+	UFUNCTION(BlueprintPure, Category = "Block")
+	float GetBlockWeight() const { return mBlockWeight; }
+
 	//押す力
 	int mPushPower = 0;
 
@@ -63,4 +67,8 @@ public:
 	//押せる角度の許容範囲
 	UPROPERTY(EditAnywhere, Category = "Push Settings", meta = (ClampMin = "0.0", ClampMax = "180.0"))
 	float mPushAngle = 45.0f;
+
+	//ブロックの重さ
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Block")
+	float mBlockWeight = 100.0f;
 };

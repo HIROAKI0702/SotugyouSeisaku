@@ -19,11 +19,10 @@ AGimmick_PushBlock::AGimmick_PushBlock()
 
 	mMesh->SetSimulatePhysics(true);
 
-	//プレイヤー（Pawn）とは重なるように設定
-	mMesh->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-
 	mPushPower = 100.f;
 
+	//デフォルトの重さ
+	mBlockWeight = 100.0f;
 	//デフォルトは全面(x軸方向)からのみ押せる
 	mPushDir = FVector(1.0f, 0.0f, 0.0f);
 	mPushAngle = 45.0f;

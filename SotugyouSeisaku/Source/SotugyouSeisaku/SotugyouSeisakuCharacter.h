@@ -14,6 +14,8 @@ class UCameraComponent;
 class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
+class AGimmick_PlayerSwitch;
+
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
 
@@ -113,6 +115,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Respawn")
 	float mRespawnZ = 0.0f;
 
+	//近くにある切り替えポイント
+	UPROPERTY()
+	AGimmick_PlayerSwitch* mNearbySwitchPoint = nullptr;
+
 	//プレイヤーがギミックブロックを押しているかどうか
 	bool bIsPushing = false;
 
@@ -120,5 +126,11 @@ public:
 	FVector PrevLocation;
 	//プレイヤーの前フレーム回転値
 	FRotator  PrevRotation;
+
+	//切り替えポイントを設定（切り替えポイントから呼ばれる）
+	void SetNearbySwitch(AGimmick_PlayerSwitch* SwitchPoint) { mNearbySwitchPoint = SwitchPoint; }
+
+	//インタラクト（Fキー）
+	void TryInteract();
 };
 

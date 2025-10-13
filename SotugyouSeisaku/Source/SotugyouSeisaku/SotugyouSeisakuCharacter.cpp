@@ -12,6 +12,7 @@
 #include "InputActionValue.h"
 #include "Kismet/GameplayStatics.h"
 #include "Gimmick_PushBlock.h"
+#include "Gimmick_PlayerSwitch.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -143,6 +144,9 @@ void ASotugyouSeisakuCharacter::SetupPlayerInputComponent(UInputComponent* Playe
 		//ブロックを押す/終了
 		EnhancedInputComponent->BindAction(mPushAction, ETriggerEvent::Triggered, this, &ASotugyouSeisakuCharacter::StartPush);
 		EnhancedInputComponent->BindAction(mPushAction, ETriggerEvent::Completed, this, &ASotugyouSeisakuCharacter::StopPush);
+
+		EnhancedInputComponent->BindAction(mPushAction, ETriggerEvent::Triggered, this, &ASotugyouSeisakuCharacter::TryInteract);
+
 	}
 }
 
@@ -271,5 +275,15 @@ void ASotugyouSeisakuCharacter::RespawnPlayer()
 		{
 			MoveComp->Velocity = FVector::ZeroVector;
 		}
+	}
+}
+
+/// @brief 切り替えポイントにインタラクトする関数
+void ASotugyouSeisakuCharacter::TryInteract()
+{
+	//近くに切り替えポイントがあればインタラクト
+	if (mNearbySwitchPoint)
+	{
+		mNearbySwitchPoint->OnInteract(this);
 	}
 }

@@ -6,6 +6,7 @@
 #include "Components/BoxComponent.h"
 #include "SotugyouSeisakuCharacter.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -43,7 +44,6 @@ void AGimmick_PlayerSwitch::BeginPlay()
 void AGimmick_PlayerSwitch::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 /// @brief プレイヤーがレバーのインタラクション範囲に入った瞬間に呼ばれるオーバーラップイベント
@@ -94,18 +94,62 @@ void AGimmick_PlayerSwitch::OnInteract(ASotugyouSeisakuCharacter* InteractingPla
 		return;
 	}
 
+	//クールダウンチェック：最後の切り替えから一定時間経っているか
+	float CurrentTime = GetWorld()->GetTimeSeconds();
+	float TimeSinceLastSwitch = CurrentTime - mLastSwitchTime;
+
+	if (TimeSinceLastSwitch < mSwitchCooldown)
+	{
+		float RemainingTime = mSwitchCooldown - TimeSinceLastSwitch;
+
+		return;
+	}
+
+	//初回使用時：オリジナルプレイヤーを記録
+	if (mOriginalPlayer == nullptr)
+	{
+		mOriginalPlayer = InteractingPlayer;
+	}
+
+	//現在操作中のプレイヤーによって切り替え先を決定
+	ASotugyouSeisakuCharacter* NextPlayer = nullptr;
+
+	if (InteractingPlayer == mOriginalPlayer)
+	{
+		//オリジナルプレイヤー → ターゲットプレイヤーへ
+		NextPlayer = mTargetPlayer;
+	}
+	else if (InteractingPlayer == mTargetPlayer)
+	{
+		//ターゲットプレイヤー → オリジナルプレイヤーへ
+		NextPlayer = mOriginalPlayer;
+	}
+	else
+	{
+		//想定外のプレイヤー（念のため）
+		return;
+	}
+
 	//自分自身に切り替えようとしている場合は無視
-	if (InteractingPlayer == mTargetPlayer)
+	if (InteractingPlayer == NextPlayer)
 	{
 		return;
 	}
 
-	SwitchPlayer();
+	SwitchPlayer(NextPlayer, InteractingPlayer);
+
+	//最後の切り替え時刻を更新
+	mLastSwitchTime = CurrentTime;
 }
 
 /// @brief 操作プレイヤーを入れ替える関数
-void AGimmick_PlayerSwitch::SwitchPlayer()
+void AGimmick_PlayerSwitch::SwitchPlayer(ASotugyouSeisakuCharacter* NewPlayer, ASotugyouSeisakuCharacter* OldPlayer)
 {
+	if (!NewPlayer)
+	{
+		return;
+	}
+
 	//プレイヤーコントローラーを取得
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (!PC)
@@ -116,7 +160,20 @@ void AGimmick_PlayerSwitch::SwitchPlayer()
 	//現在のポーン（プレイヤー）
 	APawn* CurrentPawn = PC->GetPawn();
 
-	// プレイヤーを切り替え
-	PC->Possess(mTargetPlayer);
+	//修正：切り替え前のプレイヤーの入力をクリア
+	if (OldPlayer)
+	{
+		//CharacterMovementの速度をリセット
+		if (UCharacterMovementComponent* Movement = OldPlayer->GetCharacterMovement())
+		{
+			Movement->StopMovementImmediately();
+		}
+
+		//コントローラーを解除
+		OldPlayer->GetController()->UnPossess();
+	}
+
+	//修正：新しいプレイヤーを操作
+	PC->Possess(NewPlayer);
 }
 

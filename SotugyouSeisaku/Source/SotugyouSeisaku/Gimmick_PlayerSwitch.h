@@ -49,16 +49,26 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Switch Settings")
 	ASotugyouSeisakuCharacter* mTargetPlayer;
 
+	//最初にこのスイッチを使ったプレイヤー（オリジナル）
+	UPROPERTY()
+	ASotugyouSeisakuCharacter* mOriginalPlayer = nullptr;
+
+	//クールダウン時間（秒）
+	UPROPERTY(EditAnywhere, Category = "Switch Settings", meta = (ClampMin = "0.0"))
+	float mSwitchCooldown = 1.0f;
+
 	//現在範囲内にいるプレイヤー
 	UPROPERTY()
 	ASotugyouSeisakuCharacter* mCurrentPlayer = nullptr;
 
 	//プレイヤーを切り替える
-	void SwitchPlayer();
+	void SwitchPlayer(ASotugyouSeisakuCharacter* NewPlayer, ASotugyouSeisakuCharacter* OldPlayer);
 
 	//プレイヤーが範囲内でFキーを押したときに呼ばれる
 	void OnInteract(ASotugyouSeisakuCharacter* InteractingPlayer);
 
+	//クールダウン用：最後に切り替えた時刻
+	float mLastSwitchTime = 0.0f;
 
 	//プレイヤーが範囲内にいるか
 	bool bPlayerInRange = false;

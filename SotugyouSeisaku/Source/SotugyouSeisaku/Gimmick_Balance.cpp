@@ -6,6 +6,7 @@
 #include "Components/BoxComponent.h"
 #include "Gimmick_PushBlock.h"
 #include "DrawDebugHelpers.h"
+#include "SotugyouSeisakuCharacter.h"
 
 // Sets default values
 

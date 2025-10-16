@@ -8,6 +8,7 @@
 
 class UBoxComponent;
 class AGimmick_PushBlock;
+class ASotugyouSeisakuCharacter;
 
 UCLASS()
 class SOTUGYOUSEISAKU_API AGimmick_Balance : public AActor

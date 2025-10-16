@@ -62,7 +62,7 @@ void AGimmick_FallFloor::Tick(float DeltaTime)
 }
 
 /// @brief プレイヤーなどが床に乗った瞬間に呼ばれるイベント。
-///        一定時間後に床を落下させる。
+///        一定時間後に床を削除する。
 /// @param OverlappedComponent イベントを発生させた自身のコリジョン
 /// @param OtherActor トリガー範囲に入ったアクタ
 /// @param OtherComp 相手アクタのどのコンポーネントに当たったか

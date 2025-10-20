@@ -7,6 +7,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 
+/// @brief コンストラクタ　タイトルウィジェットの初期設定
 void UTitleScreenWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -39,6 +40,7 @@ void UTitleScreenWidget::NativeConstruct()
 	}
 }
 
+/// @brief ゲーム開始ボタンをクリックしたときに呼ばれる関数
 void UTitleScreenWidget::OnStartButtonClicked()
 {
 	UE_LOG(LogTemp, Log, TEXT("Start button clicked"));
@@ -50,12 +52,14 @@ void UTitleScreenWidget::OnStartButtonClicked()
 	}
 }
 
+/// @brief 設定ボタンを押したときに呼ばれる関数
 void UTitleScreenWidget::OnOptionsButtonClicked()
 {
 	UE_LOG(LogTemp, Log, TEXT("Options button clicked"));
 	//オプション画面の処理（今回は省略）
 }
 
+/// @brief ゲーム終了ボタンを押したときに呼ばれる関数
 void UTitleScreenWidget::OnQuitButtonClicked()
 {
 	UE_LOG(LogTemp, Log, TEXT("Quit button clicked"));

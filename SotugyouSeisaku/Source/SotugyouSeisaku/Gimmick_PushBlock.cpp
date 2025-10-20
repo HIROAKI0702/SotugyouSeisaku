@@ -9,6 +9,8 @@
 
 
 // Sets default values
+
+/// @brief コンストラクタ　プレイヤーが押せるブロックの各種設定
 AGimmick_PushBlock::AGimmick_PushBlock()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.

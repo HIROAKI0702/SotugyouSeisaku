@@ -6,6 +6,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values
+
+/// @brief コンストラクタ　ジャンプパッドの各種設定
 AGimmick_JumpPad::AGimmick_JumpPad()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.

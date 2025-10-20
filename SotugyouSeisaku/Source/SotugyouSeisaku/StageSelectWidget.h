@@ -17,4 +17,23 @@ UCLASS()
 class SOTUGYOUSEISAKU_API UStageSelectWidget : public UUserWidget
 {
 	GENERATED_BODY()
+
+	//ステージボタンの配列
+	UPROPERTY(EditAnywhere, meta = (BindWidgetOptional))
+	TArray<UButton*> mStageButtons;
+
+	//戻るボタン
+	UPROPERTY(meta = (BindWidgetOptional))
+	UButton* mBackButton;
+
+protected:
+	virtual void NativeConstruct() override;
+
+private:
+	//ボタン押下コールバック
+	UFUNCTION()
+	void OnStageButtonClicked(int32 StageIndex);
+
+	UFUNCTION()
+	void OnBackClicked();
 };

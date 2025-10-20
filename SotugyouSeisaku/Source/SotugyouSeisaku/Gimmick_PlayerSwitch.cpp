@@ -10,6 +10,8 @@
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
+
+/// @brief コンストラクタ　プレイヤー切り替えギミックの各種設定
 AGimmick_PlayerSwitch::AGimmick_PlayerSwitch()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.

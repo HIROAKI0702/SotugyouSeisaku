@@ -4,6 +4,7 @@
 #include "MR_GameInstance.h"
 #include "Kismet/GameplayStatics.h"
 
+/// @brief コンストラクタ
 UMR_GameInstance::UMR_GameInstance()
 {
 	//デフォルトでステージ1だけアンロック
@@ -53,7 +54,7 @@ void UMR_GameInstance::LoadStage(int32 StageIndex)
 		//対応するレベル名を取得
 		FName LevelName = mStages[StageIndex].mLevelName;
 
-		UE_LOG(LogTemp, Warning, TEXT("Loading stage: %s"), *LevelName.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Loading stage%s"), *LevelName.ToString());
 
 		//レベルを開く
 		UGameplayStatics::OpenLevel(this, LevelName);

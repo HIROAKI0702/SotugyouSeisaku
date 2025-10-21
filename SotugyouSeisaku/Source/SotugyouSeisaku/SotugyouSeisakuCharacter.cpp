@@ -10,6 +10,9 @@
 #include "EnhancedInputComponent.h"//入力システム
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Interactable.h"
+#include "InteractWidget.h"
+#include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Gimmick_PushBlock.h"
 #include "Gimmick_PlayerSwitch.h"
@@ -56,6 +59,33 @@ ASotugyouSeisakuCharacter::ASotugyouSeisakuCharacter()
 void ASotugyouSeisakuCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	//インタラクトUIを作成
+	if (mInteractWidgetClass)
+	{
+		mInteractWidget = CreateWidget<UInteractWidget>(GetWorld(), mInteractWidgetClass);
+		if (mInteractWidget)
+		{
+			mInteractWidget->AddToViewport();
+			mInteractWidget->HideWidget();
+			UE_LOG(LogTemplateCharacter, Log, TEXT("Interact widget created successfully"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemplateCharacter, Warning, TEXT("InteractWidgetClass is not set!"));
+	}
+
+	//定期的にインタラクト可能なオブジェクトをチェック
+	GetWorldTimerManager().SetTimer(
+		mInteractCheckTimerHandle,
+		this,
+		&ASotugyouSeisakuCharacter::CheckForInteractables,
+		mInteractCheckInterval,
+		true
+	);
+
+	//初期位置を保存
 	PrevLocation = GetActorLocation();
 	PrevRotation = GetActorRotation();
 
@@ -214,7 +244,6 @@ void ASotugyouSeisakuCharacter::StartPush()
 		//押せる位置にいるかチェック
 		if (!mTargetBlock->CanBePushedByPlayer(GetActorLocation()))
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Cannot push from this side!"));
 			return;
 		}
 
@@ -257,6 +286,96 @@ void ASotugyouSeisakuCharacter::StopPush()
 
 		mTargetBlock->StopPushing();
 		mTargetBlock = nullptr;
+	}
+}
+
+/// @brief インタラクト可能なオブジェクトを捜索
+void ASotugyouSeisakuCharacter::CheckForInteractables()
+{
+	//キャラクターの前方をチェック
+	FVector Start = GetActorLocation();
+	FVector ForwardVector = GetActorForwardVector();
+	FVector End = Start + (ForwardVector * mInteractCheckDistance);
+
+	//球体トレース用のパラメータ
+	FCollisionShape Sphere = FCollisionShape::MakeSphere(mInteractCheckRadius);
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+
+	TArray<FHitResult> HitResults;
+	bool bHit = GetWorld()->SweepMultiByChannel(
+		HitResults,
+		Start,
+		End,
+		FQuat::Identity,
+		ECC_Visibility,
+		Sphere,
+		QueryParams
+	);
+
+	//最も近いインタラクト可能なオブジェクトを探す
+	AActor* ClosestInteractable = nullptr;
+	float ClosestDistance = mInteractCheckDistance;
+
+	if (bHit)
+	{
+		for (const FHitResult& Hit : HitResults)
+		{
+			AActor* HitActor = Hit.GetActor();
+			if (HitActor && HitActor->GetClass()->ImplementsInterface(UInteractable::StaticClass()))
+			{
+				IInteractable* Interactable = Cast<IInteractable>(HitActor);
+				if (Interactable && Interactable->Execute_CanInteract(HitActor, this))
+				{
+					float Distance = FVector::Dist(GetActorLocation(), HitActor->GetActorLocation());
+					if (Distance < ClosestDistance)
+					{
+						ClosestDistance = Distance;
+						ClosestInteractable = HitActor;
+					}
+				}
+			}
+		}
+	}
+
+	//現在のインタラクト可能オブジェクトを更新
+	if (ClosestInteractable)
+	{
+		mCurrentInteractable.SetObject(ClosestInteractable);
+		mCurrentInteractable.SetInterface(Cast<IInteractable>(ClosestInteractable));
+	}
+	else
+	{
+		mCurrentInteractable.SetObject(nullptr);
+		mCurrentInteractable.SetInterface(nullptr);
+	}
+
+	//UIを更新
+	UpdateInteractUI();
+}
+
+/// @brief UIをアップデートする関数
+void ASotugyouSeisakuCharacter::UpdateInteractUI()
+{
+	if (!mInteractWidget)
+	{
+		return;
+	}
+
+	if (mCurrentInteractable.GetObject())
+	{
+		IInteractable* Interactable = mCurrentInteractable.GetInterface();
+		if (Interactable)
+		{
+			AActor* InteractableActor = Cast<AActor>(mCurrentInteractable.GetObject());
+			FText InteractText = Interactable->Execute_GetInteractText(InteractableActor);
+			mInteractWidget->SetInteractText(InteractText);
+			mInteractWidget->ShowWidget();
+		}
+	}
+	else
+	{
+		mInteractWidget->HideWidget();
 	}
 }
 

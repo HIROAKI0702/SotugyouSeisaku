@@ -4,10 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Interactable.h"
 #include "Gimmick_PushBlock.generated.h"
 
+class ASotugyouSeisakuCharacter;
+
 UCLASS()
-class SOTUGYOUSEISAKU_API AGimmick_PushBlock : public AActor
+class SOTUGYOUSEISAKU_API AGimmick_PushBlock : public AActor, public IInteractable
 {
 	GENERATED_BODY()
 
@@ -31,6 +34,11 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	//インターフェース実装
+	virtual void Interact_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter) override;
+	virtual bool CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter) const override;
+	virtual FText GetInteractText_Implementation() const override;
 
 	//押す処理
 	UFUNCTION()
@@ -71,4 +79,8 @@ public:
 	//ブロックの重さ
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Block")
 	float mBlockWeight = 100.0f;
+
+	//インタラクト可能距離
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	float mInteractDistance = 200.0f;
 };

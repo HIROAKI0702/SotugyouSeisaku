@@ -28,6 +28,7 @@ AGimmick_PushBlock::AGimmick_PushBlock()
 	//デフォルトは全面(x軸方向)からのみ押せる
 	mPushDir = FVector(1.0f, 0.0f, 0.0f);
 	mPushAngle = 45.0f;
+	mInteractDistance = 200.0f;
 }
 
 // Called when the game starts or when spawned
@@ -41,6 +42,60 @@ void AGimmick_PushBlock::BeginPlay()
 void AGimmick_PushBlock::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+/// @brief インターフェース実装
+/// @param PlayerCharacter プレイヤー
+void AGimmick_PushBlock::Interact_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter)
+{
+	if (PlayerCharacter && CanBePushedByPlayer(PlayerCharacter->GetActorLocation()))
+	{
+		if (!bIsBeginePushed)
+		{
+			StartPushing(PlayerCharacter);
+			UE_LOG(LogTemp, Log, TEXT("Started pushing block"));
+		}
+		else
+		{
+			StopPushing();
+			UE_LOG(LogTemp, Log, TEXT("Stopped pushing block"));
+		}
+	}
+}
+
+/// @brief インタラクトできるかどうかをチェックする関数
+/// @param PlayerCharacter インタラクトするプレイヤー
+/// @return プレイヤーかどうかを返す
+bool AGimmick_PushBlock::CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter) const
+{
+	if (!PlayerCharacter)
+	{
+		return false;
+	}
+
+	// 距離チェック
+	float Distance = FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation());
+	if (Distance > mInteractDistance)
+	{
+		return false;
+	}
+
+	// 押せる位置にいるかチェック
+	return CanBePushedByPlayer(PlayerCharacter->GetActorLocation());
+}
+
+/// @brief インタラクト中にテキストを出す関数
+/// @return プレイヤーがインタラクトしているかどうかを返す
+FText AGimmick_PushBlock::GetInteractText_Implementation() const
+{
+	if (bIsBeginePushed)
+	{
+		return FText::FromString(TEXT("Stop Push"));
+	}
+	else
+	{
+		return FText::FromString(TEXT("Push"));
+	}
 }
 
 /// @brief プレイヤーに押された時に呼ばれる関数

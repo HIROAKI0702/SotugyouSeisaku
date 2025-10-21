@@ -96,6 +96,37 @@ public:
 	UFUNCTION()
 	void RespawnPlayer();
 
+	//インタラクト可能なオブジェクトを探す
+	UFUNCTION()
+	void CheckForInteractables();
+
+	//UIの更新
+	UFUNCTION()
+	void UpdateInteractUI();
+
+	//現在インタラクト可能なオブジェクト
+	UPROPERTY()
+	TScriptInterface<class IInteractable> mCurrentInteractable;
+
+	//インタラクトUI
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<class UInteractWidget> mInteractWidgetClass;
+
+	UPROPERTY()
+	class UInteractWidget* mInteractWidget;
+
+	//インタラクト検知の範囲
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	float mInteractCheckDistance = 300.0f;
+
+	//インタラクト検知の半径
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	float mInteractCheckRadius = 100.0f;
+
+	//インタラクト検知の間隔（秒）
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	float mInteractCheckInterval = 0.1f;
+
 	//押すブロック
 	UPROPERTY()
 	AGimmick_PushBlock* mTargetBlock;
@@ -122,6 +153,8 @@ public:
 	//プレイヤーがギミックブロックを押しているかどうか
 	bool bIsPushing = false;
 
+	//タイマーハンドル
+	FTimerHandle mInteractCheckTimerHandle;
 	//プレイヤーの前フレーム位置
 	FVector PrevLocation;
 	//プレイヤーの前フレーム回転値

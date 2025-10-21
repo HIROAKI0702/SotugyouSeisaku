@@ -8,7 +8,6 @@
 
 class UButton;
 class UMR_GameInstance;
-class APlayerController;
 
 /**
  * 
@@ -18,22 +17,37 @@ class SOTUGYOUSEISAKU_API UStageSelectWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-	//ステージボタンの配列
-	UPROPERTY(EditAnywhere, meta = (BindWidgetOptional))
-	TArray<UButton*> mStageButtons;
-
-	//戻るボタン
-	UPROPERTY(meta = (BindWidgetOptional))
+	//タイトルに戻るボタン
+	UPROPERTY(meta = (BindWidget))
 	UButton* mBackButton;
 
 protected:
 	virtual void NativeConstruct() override;
 
 private:
-	//ボタン押下コールバック
+	//ボタンクリックイベント
 	UFUNCTION()
-	void OnStageButtonClicked(int32 StageIndex);
+	void OnBackButtonClicked();
+
+	//StageSelectWidget.h
+	UFUNCTION()
+	void OnStage0ButtonClicked();
 
 	UFUNCTION()
-	void OnBackClicked();
+	void OnStage1ButtonClicked();
+
+	UFUNCTION()
+	void OnStage2ButtonClicked();
+
+	//GameInstance参照
+	UMR_GameInstance* mGameInstance;
+
+	//ステージボタンの配列（動的に取得）
+	TArray<UButton*> mStageButtons;
+
+	//ステージボタンを自動検出
+	void FindStageButtons();
+
+	//ステージボタンの状態を更新
+	void UpdateStageButtons();
 };

@@ -1,10 +1,12 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "SotugyouSeisakuGameMode.generated.h"
+
+class UUserWidget;
 
 UCLASS(minimalapi)
 class ASotugyouSeisakuGameMode : public AGameModeBase
@@ -13,6 +15,18 @@ class ASotugyouSeisakuGameMode : public AGameModeBase
 
 public:
 	ASotugyouSeisakuGameMode();
+
+protected:
+    virtual void BeginPlay() override;
+
+    //チュートリアルウィジェットのクラス
+    UPROPERTY(EditDefaultsOnly, Category = "UI")
+    TSubclassOf<UUserWidget> TutorialWidgetClass;
+
+private:
+    //作成されたウィジェットの参照
+    UPROPERTY()
+    UUserWidget* TutorialWidgetInstance;
 };
 
 

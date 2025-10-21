@@ -1,9 +1,12 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
+﻿// Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "SotugyouSeisakuGameMode.h"
 #include "SotugyouSeisakuCharacter.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Blueprint/UserWidget.h"
+#include "GameFramework/PlayerController.h"
 
+/// @brief コンストラクタ　デフォルトのポーンクラスを設定
 ASotugyouSeisakuGameMode::ASotugyouSeisakuGameMode()
 {
 	// set default pawn class to our Blueprinted character
@@ -12,4 +15,36 @@ ASotugyouSeisakuGameMode::ASotugyouSeisakuGameMode()
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
+}
+
+/// @brief ビギンプレイ　チュートリアルウィジェットの表示
+void ASotugyouSeisakuGameMode::BeginPlay()
+{
+    Super::BeginPlay();
+
+    if (TutorialWidgetClass)
+    {
+        //プレイヤーコントローラーを取得
+        APlayerController* PC = GetWorld()->GetFirstPlayerController();
+        if (PC)
+        {
+            //ウィジェット作成
+            TutorialWidgetInstance = CreateWidget<UUserWidget>(PC, TutorialWidgetClass);
+            if (TutorialWidgetInstance)
+            {
+                //ウィジェットを画面に追加
+                TutorialWidgetInstance->AddToViewport();
+
+                //UI専用入力モードに切り替え
+                FInputModeUIOnly InputMode;
+                InputMode.SetWidgetToFocus(TutorialWidgetInstance->TakeWidget());
+                InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+                PC->SetInputMode(InputMode);
+
+                PC->bShowMouseCursor = true;
+                PC->bEnableClickEvents = true;
+                PC->bEnableMouseOverEvents = true;
+            }
+        }
+    }
 }

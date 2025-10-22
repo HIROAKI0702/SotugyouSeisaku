@@ -4,13 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Interactable.h"
 #include "Gimmick_PlayerSwitch.generated.h"
 
 class UBoxComponent;
 class ASotugyouSeisakuCharacter;
 
 UCLASS()
-class SOTUGYOUSEISAKU_API AGimmick_PlayerSwitch : public AActor
+class SOTUGYOUSEISAKU_API AGimmick_PlayerSwitch : public AActor, public IInteractable
 {
 	GENERATED_BODY()
 
@@ -35,6 +36,11 @@ protected:
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
+
+	//インターフェース実装
+	virtual void Interact_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter) override;
+	virtual bool CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter) const override;
+	virtual FText GetInteractText_Implementation() const override;
 
 	//オーバーラップイベント
 	UFUNCTION()
@@ -72,5 +78,9 @@ public:
 
 	//プレイヤーが範囲内にいるか
 	bool bPlayerInRange = false;
+
+	//インタラクト可能距離
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	float mInteractDistance = 200.0f;
 
 };

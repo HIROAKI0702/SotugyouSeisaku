@@ -30,6 +30,9 @@ AGimmick_PlayerSwitch::AGimmick_PlayerSwitch()
 	mTriggerBox->SetupAttachment(RootComponent);
 	mTriggerBox->SetBoxExtent(FVector(100.0f, 100.0f, 100.0f));
 	mTriggerBox->SetGenerateOverlapEvents(true);
+
+	//インタラクト可能距離
+	mInteractDistance = 200.0f;
 }
 
 // Called when the game starts or when spawned
@@ -46,6 +49,49 @@ void AGimmick_PlayerSwitch::BeginPlay()
 void AGimmick_PlayerSwitch::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+}
+
+/// @brief インターフェース実装
+/// @param PlayerCharacter プレイヤー
+void AGimmick_PlayerSwitch::Interact_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter)
+{
+	if (PlayerCharacter && bPlayerInRange)
+	{
+		OnInteract(PlayerCharacter);
+	}
+}
+
+/// @brief インタラクトできるかどうかをチェックする関数
+/// @param PlayerCharacter インタラクトするプレイヤー
+/// @return プレイヤーかどうかを返す
+bool AGimmick_PlayerSwitch::CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter) const
+{
+	if (!PlayerCharacter)
+	{
+		return false;
+	}
+
+	if (!mTargetPlayer)
+	{
+		return false;
+	}
+
+	//距離チェック
+	float Distance = FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation());
+	if (Distance > mInteractDistance)
+	{
+		return false;
+	}
+
+	// 押せる位置にいるかチェック
+	return bPlayerInRange;
+}
+
+/// @brief インタラクト中にテキストを出す関数
+/// @return プレイヤーがインタラクトしているかどうかを返す
+FText AGimmick_PlayerSwitch::GetInteractText_Implementation() const
+{
+	return FText::FromString(TEXT("Switch Player"));
 }
 
 /// @brief プレイヤーがレバーのインタラクション範囲に入った瞬間に呼ばれるオーバーラップイベント

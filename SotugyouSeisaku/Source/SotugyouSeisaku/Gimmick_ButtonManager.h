@@ -43,9 +43,16 @@ private:
 
 	//成功後にボタンをリセットするか
 	UPROPERTY(EditAnywhere, Category = "Button Sequence")
-	bool bResetAfterSuccess = false;	// === 内部状態 ===
+	bool bResetAfterSuccess = false;
 
-	//現在何番目のボタンを待っているか（0から始まる）
+	//ドアが開いている時間
+	UPROPERTY(EditAnywhere, Category = "Button Sequence")
+	float mDoorOpenDuration = 5.0f;
+
+	//ドアが開いてからの経過時間
+	float mDoorOpenTimer = 0.0f;
+
+	//現在何番目のボタンを待っているか
 	int32 mCurrentStep = 0;
 
 	//すべて正しい順番で押されたか
@@ -53,6 +60,9 @@ private:
 
 	//ドアが開いているか
 	bool bDoorOpen = false;
+
+	//タイマーが動作中かどうか
+	bool bDoorTimerActive = false;
 
 	//ドアの初期位置
 	FVector mDoorOriginalPosition;
@@ -75,6 +85,9 @@ private:
 
 	//ドアを動かす
 	void MoveDoor(float DeltaTime);
+
+	//ドアを閉じる
+	void CloseDoor();
 
 	//正解時の処理
 	void OnSequenceSuccess();

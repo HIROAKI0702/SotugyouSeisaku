@@ -12,6 +12,11 @@ AGimmick_ButtonManager::AGimmick_ButtonManager()
 	mDoorMoveSpeed = 200.0f;
 	bResetOnFailure = true;
 	bResetAfterSuccess = false;
+
+	//ドアの開放持続時間設定
+	mDoorOpenDuration = 5.0f;
+	mDoorOpenTimer = 0.0f;
+	bDoorTimerActive = false;
 }
 
 void AGimmick_ButtonManager::BeginPlay()
@@ -43,6 +48,18 @@ void AGimmick_ButtonManager::Tick(float DeltaTime)
 	if (mTargetDoor)
 	{
 		MoveDoor(DeltaTime);
+	}
+
+	//ドアが開いている時間をカウント
+	if (bDoorTimerActive)
+	{
+		mDoorOpenTimer += DeltaTime;
+
+		//設定時間を超えたらドアを閉じる
+		if (mDoorOpenTimer >= mDoorOpenDuration)
+		{
+			CloseDoor();
+		}
 	}
 }
 
@@ -90,8 +107,9 @@ void AGimmick_ButtonManager::OnSequenceSuccess()
 {
 	bSequenceCompleted = true;
 	bDoorOpen = true;
-	// ビジュアルフィードバック（オプション）
-	// 例: パーティクルエフェクト、サウンド再生など
+	
+	bDoorTimerActive = true;
+	mDoorOpenTimer = 0.0f;
 }
 
 /// @brief ボタンの押す順番を間違えた事を通知する関数
@@ -135,4 +153,18 @@ void AGimmick_ButtonManager::MoveDoor(float DeltaTime)
 	);
 
 	mTargetDoor->SetActorLocation(NewPosition);
+}
+
+/// @brief ドアを閉じる関数
+void AGimmick_ButtonManager::CloseDoor()
+{
+	bDoorOpen = false;
+	bDoorTimerActive = false;
+	mDoorOpenTimer = 0.0f;
+
+	//シーケンスをリセット（必要に応じて）
+	if (bResetAfterSuccess)
+	{
+		ResetSequence();
+	}
 }

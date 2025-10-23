@@ -16,6 +16,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Gimmick_PushBlock.h"
 #include "Gimmick_PlayerSwitch.h"
+#include "Gimmick_FallFloorManager.h"
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -66,14 +67,9 @@ void ASotugyouSeisakuCharacter::BeginPlay()
 		mInteractWidget = CreateWidget<UInteractWidget>(GetWorld(), mInteractWidgetClass);
 		if (mInteractWidget)
 		{
-			mInteractWidget->AddToViewport();
+			mInteractWidget->AddToViewport(10);
 			mInteractWidget->HideWidget();
-			UE_LOG(LogTemplateCharacter, Log, TEXT("Interact widget created successfully"));
 		}
-	}
-	else
-	{
-		UE_LOG(LogTemplateCharacter, Warning, TEXT("InteractWidgetClass is not set!"));
 	}
 
 	//定期的にインタラクト可能なオブジェクトをチェック
@@ -96,6 +92,14 @@ void ASotugyouSeisakuCharacter::BeginPlay()
 	if (Starts.Num() > 0)
 	{
 		mPlayerStart = Starts[0]; //最初の PlayerStart を使用
+	}
+
+	// FallFloorManagerを検索
+	TArray<AActor*> FoundManagers;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGimmick_FallFloorManager::StaticClass(), FoundManagers);
+	if (FoundManagers.Num() > 0)
+	{
+		mFloorManager = Cast<AGimmick_FallFloorManager>(FoundManagers[0]);
 	}
 }
 
@@ -362,6 +366,13 @@ void ASotugyouSeisakuCharacter::UpdateInteractUI()
 		return;
 	}
 
+	//コントローラーが有効かチェック（切り替え中は無視）
+	if (!Controller || !Controller->IsLocalPlayerController())
+	{
+		mInteractWidget->HideWidget();
+		return;
+	}
+
 	if (mCurrentInteractable.GetObject())
 	{
 		IInteractable* Interactable = mCurrentInteractable.GetInterface();
@@ -394,6 +405,12 @@ void ASotugyouSeisakuCharacter::RespawnPlayer()
 		{
 			MoveComp->Velocity = FVector::ZeroVector;
 		}
+
+		//すべての床を再生成
+		if (mFloorManager)
+		{
+			mFloorManager->RespawnAllFloors();
+		}
 	}
 }
 
@@ -404,5 +421,24 @@ void ASotugyouSeisakuCharacter::TryInteract()
 	if (mNearbySwitchPoint)
 	{
 		mNearbySwitchPoint->OnInteract(this);
+	}
+}
+
+/// @brief 現在のインタラクト用ウィジェットを取得する関数
+/// @return 現在キャラクターが保持しているインタラクト用ウィジェットのポインタ
+UInteractWidget* ASotugyouSeisakuCharacter::GetInteractWidget() const
+{
+	return mInteractWidget;
+}
+
+/// @brief コントローラーからキャラクターの所有権が外れたときに呼ばれる関数
+void ASotugyouSeisakuCharacter::UnPossessed()
+{
+	Super::UnPossessed();
+
+	//所有権が外れたらUIを隠す
+	if (mInteractWidget)
+	{
+		mInteractWidget->HideWidget();
 	}
 }

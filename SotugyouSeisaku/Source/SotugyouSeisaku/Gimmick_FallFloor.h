@@ -8,6 +8,8 @@
 #include "TimerManager.h"
 #include "Gimmick_FallFloor.generated.h"
 
+class AGimmick_FallFloorManager;
+
 UCLASS()
 class SOTUGYOUSEISAKU_API AGimmick_FallFloor : public AActor
 {
@@ -51,6 +53,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Falling Floor")
 	float mShakeFrequency = 0.0f;
 
+	//マネージャーへの参照
+	UPROPERTY()
+	TObjectPtr<AGimmick_FallFloorManager> mFloorManager;
+
 	//床の元の位置
 	FVector mOriginalLocation;
 
@@ -72,6 +78,8 @@ public:
 
 	//一定時間経過後に呼ばれ、床を削除する関数
 	void DeleteFloor();
-	//床が落下した後、一定時間後に元の位置へ戻す処理を行う関数
-	void RespawnFloor();
+
+	//マネージャーを設定
+	void SetManager(class AGimmick_FallFloorManager* Manager) { mFloorManager = Manager; }
+
 };

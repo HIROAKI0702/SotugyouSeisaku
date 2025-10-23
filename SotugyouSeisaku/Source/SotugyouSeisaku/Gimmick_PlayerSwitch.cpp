@@ -8,6 +8,7 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "InteractWidget.h"
 
 // Sets default values
 
@@ -205,12 +206,19 @@ void AGimmick_PlayerSwitch::SwitchPlayer(ASotugyouSeisakuCharacter* NewPlayer, A
 		return;
 	}
 
-	//現在のポーン（プレイヤー）
-	APawn* CurrentPawn = PC->GetPawn();
-
-	//修正：切り替え前のプレイヤーの入力をクリア
+	//古いプレイヤーの処理
 	if (OldPlayer)
 	{
+		//ウィジェットを非表示
+		if (OldPlayer->GetInteractWidget())
+		{
+			OldPlayer->GetInteractWidget()->HideWidget();
+		}
+
+		//インタラクト可能オブジェクトをクリア
+		OldPlayer->mCurrentInteractable.SetObject(nullptr);
+		OldPlayer->mCurrentInteractable.SetInterface(nullptr);
+
 		//CharacterMovementの速度をリセット
 		if (UCharacterMovementComponent* Movement = OldPlayer->GetCharacterMovement())
 		{
@@ -221,7 +229,27 @@ void AGimmick_PlayerSwitch::SwitchPlayer(ASotugyouSeisakuCharacter* NewPlayer, A
 		OldPlayer->GetController()->UnPossess();
 	}
 
-	//修正：新しいプレイヤーを操作
+	//新しいプレイヤーを操作
 	PC->Possess(NewPlayer);
+
+	//新しいプレイヤーの状態をクリア
+	NewPlayer->mCurrentInteractable.SetObject(nullptr);
+	NewPlayer->mCurrentInteractable.SetInterface(nullptr);
+
+	//新しいプレイヤーのウィジェットを確実に非表示
+	if (NewPlayer->GetInteractWidget())
+	{
+		NewPlayer->GetInteractWidget()->HideWidget();
+	}
+
+	// 切り替え直後はインタラクトチェックを少し遅延させる
+	// これにより、切り替え直後の誤検出を防ぐ
+	GetWorld()->GetTimerManager().SetTimerForNextTick([NewPlayer]()
+		{
+			if (NewPlayer)
+			{
+				NewPlayer->UpdateInteractUI();
+			}
+		});
 }
 

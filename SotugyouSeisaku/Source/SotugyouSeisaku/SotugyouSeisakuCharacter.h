@@ -15,6 +15,8 @@ class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 class AGimmick_PlayerSwitch;
+class AGimmick_FallFloorManager;
+class UInteractWidget;
 
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -87,6 +89,12 @@ protected:
 public:
 	virtual void Tick(float DeltaTime) override;
 
+	//プレイヤーがアンポゼスされた時に呼ばれる
+	virtual void UnPossessed() override;
+
+	//インタラクトUIを取得
+	UInteractWidget* GetInteractWidget() const;
+
 	/** Returns CameraBoom subobject **/
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
@@ -149,6 +157,10 @@ public:
 	//近くにある切り替えポイント
 	UPROPERTY()
 	AGimmick_PlayerSwitch* mNearbySwitchPoint = nullptr;
+
+	//床のマネージャーへの参照
+	UPROPERTY()
+	TObjectPtr<AGimmick_FallFloorManager> mFloorManager;
 
 	//プレイヤーがギミックブロックを押しているかどうか
 	bool bIsPushing = false;

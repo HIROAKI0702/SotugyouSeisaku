@@ -3,6 +3,7 @@
 
 #include "Gimmick_FallFloor.h"
 #include "GameFramework/Character.h"
+#include "Gimmick_FallFloorManager.h"
 
 // Sets default values
 
@@ -29,6 +30,9 @@ AGimmick_FallFloor::AGimmick_FallFloor()
 	// デフォルト値を設定
 	mShakeAmplitude = 5.0f;  //揺れの強さ
 	mShakeFrequency = 20.0f; //揺れの速さ
+	mDeleteDelay = 1.0f;
+	mShakeTimer = 0.0f;
+	bIsShaking = false;
 }
 
 // Called when the game starts or when spawned
@@ -90,21 +94,12 @@ void AGimmick_FallFloor::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedCo
 /// @brief 床の削除を開始する。Tickで位置を更新するようになる。
 void AGimmick_FallFloor::DeleteFloor()
 {
-	//一定時間後に再生成
-	GetWorldTimerManager().SetTimer(RespawnTimerHandle, this, &AGimmick_FallFloor::RespawnFloor, mRespawnDelay, false);
+	//マネージャーに破壊を通知
+	if (mFloorManager)
+	{
+		mFloorManager->OnFloorDestroyed(this);
+	}
 
 	Destroy();//床を削除 → プレイヤーは落下
-}
-
-/// @brief 床を再生成する関数
-void AGimmick_FallFloor::RespawnFloor()
-{
-	if (!GetWorld()) return;
-
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;//衝突を無視して再生成
-
-	//元の位置・回転で同じ床クラスを再生成
-	GetWorld()->SpawnActor<AGimmick_FallFloor>(GetClass(), mOriginalLocation, GetActorRotation(), SpawnParams);
 }
 

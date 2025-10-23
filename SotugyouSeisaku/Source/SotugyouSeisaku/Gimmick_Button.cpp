@@ -46,10 +46,10 @@ void AGimmick_Button::BeginPlay()
 	mTriggerBox->OnComponentEndOverlap.AddDynamic(this, &AGimmick_Button::OnTriggerEndOverlap);
 
 	//ターゲットブロックの初期位置を保存
-	if (mTargetDoor)
+	if (mTargetDoor && !mButtonManager)
 	{
 		mBlockOriginalPosition = mTargetDoor->GetActorLocation();
-		mBlockTargetPosition = mBlockOriginalPosition + mMoveDir;	
+		mBlockTargetPosition = mBlockOriginalPosition + mMoveDir;
 	}
 }
 
@@ -59,7 +59,7 @@ void AGimmick_Button::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	//ブロックを目標位置に向かって移動
-	if (mTargetDoor)
+	if (mTargetDoor && !mButtonManager)
 	{
 		MoveBlock(DeltaTime);
 	}
@@ -176,20 +176,4 @@ void AGimmick_Button::MoveBlock(float DeltaTime)
 	);
 
 	mTargetDoor->SetActorLocation(NewPosition);
-
-	//デバッグ：目標位置に到達したらログ出力
-	if (FVector::Dist(NewPosition, TargetPosition) < 1.0f)
-	{
-		static bool bReachedTarget = false;
-		if (!bReachedTarget)
-		{
-			UE_LOG(LogTemp, Log, TEXT("Block reached target position"));
-			bReachedTarget = true;
-		}
-	}
-	else
-	{
-		static bool bReachedTarget = true;
-		bReachedTarget = false;
-	}
 }

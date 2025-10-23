@@ -49,7 +49,7 @@ protected:
 
 public:	
 	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	//virtual void Tick(float DeltaTime) override;
 
     //床を登録
     UFUNCTION(BlueprintCallable, Category = "Floor Manager")

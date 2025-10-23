@@ -67,30 +67,41 @@ void AGimmick_ButtonManager::Tick(float DeltaTime)
 /// @param PressedButton //押されたボタンアクタ
 void AGimmick_ButtonManager::OnButtonPressed(AGimmick_Button* PressedButton)
 {
-	//すでにクリア済みの場合は何もしない
-	if (bSequenceCompleted && !bResetAfterSuccess)
+	if (bSequenceOrderRequired)
 	{
-		return;
-	}
-
-	//押されたボタンが次に押すべきボタンか確認
-	if (mCurrentStep < mButtonSequence.Num() && mButtonSequence[mCurrentStep] == PressedButton)
-	{
-		//正解
-		mCurrentStep++;
-
-		UE_LOG(LogTemp, Error, TEXT("Success!!!"));
-
-		//すべてのボタンを正しい順番で押した
-		if (mCurrentStep >= mButtonSequence.Num())
+		//すでにクリア済みの場合は何もしない
+		if (bSequenceCompleted && !bResetAfterSuccess)
 		{
-			OnSequenceSuccess();
+			return;
+		}
+
+		//押されたボタンが次に押すべきボタンか確認
+		if (mCurrentStep < mButtonSequence.Num() && mButtonSequence[mCurrentStep] == PressedButton)
+		{
+			//正解
+			mCurrentStep++;
+
+			//すべてのボタンを正しい順番で押した
+			if (mCurrentStep >= mButtonSequence.Num())
+			{
+				OnSequenceSuccess();
+			}
+		}
+		else
+		{
+			//間違ったボタンが押された
+			OnSequenceFailure(PressedButton);
+
+			if (bResetOnFailure)
+			{
+				ResetSequence();
+			}
 		}
 	}
 	else
 	{
-		//間違ったボタンが押された
-		OnSequenceFailure(PressedButton);
+		//すべてのボタンが押されているかチェック
+		CheckAllButtonsPressed();
 	}
 }
 
@@ -98,8 +109,46 @@ void AGimmick_ButtonManager::OnButtonPressed(AGimmick_Button* PressedButton)
 /// @param ReleasedButton 離したボタンアクタ
 void AGimmick_ButtonManager::OnButtonReleased(AGimmick_Button* ReleasedButton)
 {
-	//ボタンを離してもシーケンスは継続（必要に応じて変更可能）
-	UE_LOG(LogTemp, Log, TEXT("Button released: %s"), *GetNameSafe(ReleasedButton));
+	//ボタンを離してもシーケンスは継続
+	if (!bSequenceOrderRequired)
+	{
+		//ボタンが1つでも離されたらドアを閉じる
+
+		if (bDoorOpen)
+		{
+			CloseDoor();
+		}
+
+		//念のため再チェック（他のボタンがまだ全部押されているか）
+		CheckAllButtonsPressed();
+	}
+	//順番通りモードでは、ボタンを離してもシーケンスは継続
+}
+
+/// @brief 全押しモードで全ボタンが押されているかチェックする関数
+void AGimmick_ButtonManager::CheckAllButtonsPressed()
+{
+	bool bAllPressed = true;
+
+	for (AGimmick_Button* Button : mButtonSequence)
+	{
+		if (!Button || !Button->IsPressed())
+		{
+			bAllPressed = false;
+			break;
+		}
+	}
+
+	if (bAllPressed && !bDoorOpen)
+	{
+		//全ボタンが押された
+		OnSequenceSuccess();
+	}
+	else if (!bAllPressed && bDoorOpen)
+	{
+		//ボタンが離されたのでドアを閉じる
+		CloseDoor();
+	}
 }
 
 /// @brief ボタンの順番を正解したことを通知する関数
@@ -108,8 +157,12 @@ void AGimmick_ButtonManager::OnSequenceSuccess()
 	bSequenceCompleted = true;
 	bDoorOpen = true;
 	
-	bDoorTimerActive = true;
-	mDoorOpenTimer = 0.0f;
+	//順番通りモードの場合のみタイマーを起動
+	if (bSequenceOrderRequired)
+	{
+		bDoorTimerActive = true;
+		mDoorOpenTimer = 0.0f;
+	}
 }
 
 /// @brief ボタンの押す順番を間違えた事を通知する関数
@@ -131,6 +184,9 @@ void AGimmick_ButtonManager::ResetSequence()
 /// @param DeltaTime //フレーム間の経過時間
 void AGimmick_ButtonManager::MoveDoor(float DeltaTime)
 {
+	if (!mTargetDoor)
+		return;
+
 	FVector CurrentPosition = mTargetDoor->GetActorLocation();
 	FVector TargetPosition;
 

@@ -79,6 +79,10 @@ public:
 	UFUNCTION()
 	void OnButtonReleased(AGimmick_Button* ReleasedButton);
 
+	//使用するシステムを選択：true=順番通り, false=順序無視で全押しOK
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Button Sequence")
+	bool bSequenceOrderRequired = true;
+
 private:
 	//シーケンスをリセット
 	void ResetSequence();
@@ -94,4 +98,7 @@ private:
 
 	//失敗時の処理
 	void OnSequenceFailure(AGimmick_Button* WrongButton);
+
+	//全押しモードで全ボタンが押されているかチェック
+	void CheckAllButtonsPressed();
 };

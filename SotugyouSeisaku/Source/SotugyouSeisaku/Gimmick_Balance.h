@@ -9,6 +9,7 @@
 class UBoxComponent;
 class AGimmick_PushBlock;
 class ASotugyouSeisakuCharacter;
+class UTextRenderComponent;
 
 UCLASS()
 class SOTUGYOUSEISAKU_API AGimmick_Balance : public AActor
@@ -71,6 +72,22 @@ public:
 	UPROPERTY()
 	TArray<AGimmick_PushBlock*> mRightBlocks;
 
+	//左の量りの重量表示用テキスト
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UTextRenderComponent> mLeftWeightText;
+
+	//右の量りの重量表示用テキスト
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UTextRenderComponent> mRightWeightText;
+
+	//テキストのサイズ
+	UPROPERTY(EditAnywhere, Category = "Display Settings")
+	float mTextSize = 50.0f;
+
+	//テキストの色
+	UPROPERTY(EditAnywhere, Category = "Display Settings")
+	FLinearColor mTextColor = FLinearColor::White;
+
 	//現在の左の皿の重さ
 	float mLeftWeight = 0.0f;
 
@@ -117,4 +134,7 @@ public:
 
 	//ドアを動かす
 	void MoveDoor(float DeltaTime);
+
+	//重量表示を更新する関数
+	void UpdateWeightDisplay();
 };

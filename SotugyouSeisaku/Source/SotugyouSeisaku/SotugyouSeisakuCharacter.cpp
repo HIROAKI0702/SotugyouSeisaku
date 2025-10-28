@@ -53,6 +53,21 @@ ASotugyouSeisakuCharacter::ASotugyouSeisakuCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
+	UCharacterMovementComponent* CharMove = GetCharacterMovement();
+	if (CharMove)
+	{
+		//床の速度をプレイヤーに反映させる（デフォルトでtrue）
+		CharMove->bImpartBaseVelocityX = true;
+		CharMove->bImpartBaseVelocityY = true;
+		CharMove->bImpartBaseVelocityZ = true;
+
+		//ジャンプ時に床の速度の影響を受けないようにする
+		CharMove->bImpartBaseAngularVelocity = false;
+
+		//ジャンプ時のZ軸速度の影響を軽減
+		CharMove->JumpOffJumpZFactor = 0.0f;//完全に無視
+	}
+
 	mPushDistance = 150.0f;
 	mRespawnZ = -3000.0f;
 }

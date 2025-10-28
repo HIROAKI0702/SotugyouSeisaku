@@ -4,6 +4,7 @@
 #include "Gimmick_Balance.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/TextRenderComponent.h"
 #include "Gimmick_PushBlock.h"
 #include "DrawDebugHelpers.h"
 #include "SotugyouSeisakuCharacter.h"
@@ -34,15 +35,37 @@ AGimmick_Balance::AGimmick_Balance()
 	mLeftTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("LeftTrigger"));
 	mLeftTrigger->SetupAttachment(mLeftPlateMesh);
 	mLeftTrigger->SetBoxExtent(FVector(50.0f, 50.0f, 200.0f));
-	mLeftTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 50.0f)); // 量りの少し上
+	mLeftTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 50.0f));//量りの少し上
 	mLeftTrigger->SetGenerateOverlapEvents(true);
 
 	//右のトリガー
 	mRightTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("RightTrigger"));
 	mRightTrigger->SetupAttachment(mRightPlateMesh);
 	mRightTrigger->SetBoxExtent(FVector(50.0f, 50.0f, 200.0f));
-	mRightTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 50.0f)); // 量りの少し上
+	mRightTrigger->SetRelativeLocation(FVector(0.0f, 0.0f, 50.0f));//量りの少し上
 	mRightTrigger->SetGenerateOverlapEvents(true);
+
+	//左の量りの重量表示テキスト
+	mLeftWeightText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("LeftWeightText"));
+	mLeftWeightText->SetupAttachment(mLeftPlateMesh);
+	mLeftWeightText->SetRelativeLocation(FVector(0.0f, 0.0f, 150.0f));//量りの上に表示
+	mLeftWeightText->SetRelativeRotation(FRotator(0.0f, 180.0f, 0.0f));//プレイヤー側を向く
+	mLeftWeightText->SetWorldSize(50.0f);//テキストサイズ
+	mLeftWeightText->SetTextRenderColor(FColor::White);
+	mLeftWeightText->SetHorizontalAlignment(EHTA_Center); // 中央揃え
+	mLeftWeightText->SetVerticalAlignment(EVRTA_TextCenter);
+	mLeftWeightText->SetText(FText::FromString(TEXT("0 kg")));
+
+	//追加：右の量りの重量表示テキスト
+	mRightWeightText = CreateDefaultSubobject<UTextRenderComponent>(TEXT("RightWeightText"));
+	mRightWeightText->SetupAttachment(mRightPlateMesh);
+	mRightWeightText->SetRelativeLocation(FVector(0.0f, 0.0f, 150.0f));//量りの上に表示
+	mRightWeightText->SetRelativeRotation(FRotator(0.0f, 180.0f, 0.0f));//プレイヤー側を向く
+	mRightWeightText->SetWorldSize(50.0f); // テキストサイズ
+	mRightWeightText->SetTextRenderColor(FColor::White);
+	mRightWeightText->SetHorizontalAlignment(EHTA_Center); // 中央揃え
+	mRightWeightText->SetVerticalAlignment(EVRTA_TextCenter);
+	mRightWeightText->SetText(FText::FromString(TEXT("0 kg")));
 
 	// デフォルト設定
 	mDoorMoveOffset = FVector(0.0f, 0.0f, 300.0f);
@@ -68,6 +91,9 @@ void AGimmick_Balance::BeginPlay()
 
 	mRightTrigger->OnComponentBeginOverlap.AddDynamic(this, &AGimmick_Balance::OnRightPlateBeginOverlap);
 	mRightTrigger->OnComponentEndOverlap.AddDynamic(this, &AGimmick_Balance::OnRightPlateEndOverlap);
+
+	//初期テキスト表示
+	UpdateWeightDisplay();
 }
 
 // Called every frame
@@ -86,6 +112,9 @@ void AGimmick_Balance::Tick(float DeltaTime)
 	{
 		MoveDoor(DeltaTime);
 	}
+
+	//追加：重量表示を更新
+	UpdateWeightDisplay();
 }
 
 /// @brief 左の量りにブロックを乗せた瞬間に呼ばれるオーバーラップイベント
@@ -189,6 +218,41 @@ void AGimmick_Balance::UpdateWeights()
 		{
 			mRightWeight += Block->GetBlockWeight();
 		}
+	}
+}
+
+/// @brief 重量表示を更新する関数
+void AGimmick_Balance::UpdateWeightDisplay()
+{
+	static float LastLeftWeight = -1.0f;
+	static float LastRightWeight = -1.0f;
+	
+	if (LastLeftWeight != mLeftWeight || LastRightWeight != mRightWeight)
+	{
+		LastLeftWeight = mLeftWeight;
+		LastRightWeight = mRightWeight;
+	}
+
+	if (mLeftWeightText)
+	{
+		//左の重量を表示（整数）
+		FString LeftText = FString::Printf(TEXT("%.0f"), mLeftWeight);
+		mLeftWeightText->SetText(FText::FromString(LeftText));
+	
+		//テキストのサイズと色を適用
+		mLeftWeightText->SetWorldSize(mTextSize);
+		mLeftWeightText->SetTextRenderColor(mTextColor.ToFColor(true));
+	}
+
+	if (mRightWeightText)
+	{
+		//右の重量を表示（整数）
+		FString RightText = FString::Printf(TEXT("%.0f"), mRightWeight);
+		mRightWeightText->SetText(FText::FromString(RightText));
+		
+		//テキストのサイズと色を適用
+		mRightWeightText->SetWorldSize(mTextSize);
+		mRightWeightText->SetTextRenderColor(mTextColor.ToFColor(true));
 	}
 }
 

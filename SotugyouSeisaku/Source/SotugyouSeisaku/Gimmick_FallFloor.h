@@ -58,7 +58,7 @@ public:
 	TObjectPtr<AGimmick_FallFloorManager> mFloorManager;
 
 	//床の元の位置
-	FVector mOriginalLocation;
+	FVector mOriginalMeshLocation;
 
 	//揺れているかチェックするフラグ
 	bool bIsShaking = false;

@@ -43,8 +43,8 @@ void AGimmick_FallFloor::BeginPlay()
 	//オーバーラップイベントをバインド
 	mTriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AGimmick_FallFloor::OnTriggerBeginOverlap);
 
-	//床の元の位置を保存
-	mOriginalLocation = GetActorLocation();
+	//床のメッシュの元の位置を保存
+	mOriginalMeshLocation = mMesh->GetRelativeLocation();
 }
 
 // Called every frame
@@ -61,7 +61,7 @@ void AGimmick_FallFloor::Tick(float DeltaTime)
 		ShakeOffset.Y = FMath::Cos(mShakeTimer * mShakeFrequency) * mShakeAmplitude;
 
 		//床を揺らす
-		SetActorLocation(mOriginalLocation + ShakeOffset);
+		mMesh->SetRelativeLocation(mOriginalMeshLocation + ShakeOffset);
 	}
 }
 

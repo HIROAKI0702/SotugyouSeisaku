@@ -67,6 +67,14 @@ public:
 	UPROPERTY()
 	ASotugyouSeisakuCharacter* mCurrentPlayer = nullptr;
 
+	//トリガーオーバーラップを必須にするか
+	UPROPERTY(EditAnywhere, Category = "Interaction")
+	bool bRequireOverlap = true;
+
+	//エディタで設定する代替識別子
+	UPROPERTY(EditAnywhere, Category = "Switch Settings", meta = (DisplayName = "Target Player Tag"))
+	FName mTargetPlayerTag;
+
 	//プレイヤーを切り替える
 	void SwitchPlayer(ASotugyouSeisakuCharacter* NewPlayer, ASotugyouSeisakuCharacter* OldPlayer);
 
@@ -82,5 +90,4 @@ public:
 	//インタラクト可能距離
 	UPROPERTY(EditAnywhere, Category = "Interaction")
 	float mInteractDistance = 200.0f;
-
 };

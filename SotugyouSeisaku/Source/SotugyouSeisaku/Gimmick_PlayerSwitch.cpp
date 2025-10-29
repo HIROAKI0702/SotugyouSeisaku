@@ -41,6 +41,22 @@ void AGimmick_PlayerSwitch::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	//ランタイムでターゲットプレイヤーをタグで探す
+	if (!mTargetPlayer && !mTargetPlayerTag.IsNone())
+	{
+		TArray<AActor*> Found;
+		UGameplayStatics::GetAllActorsWithTag(GetWorld(), mTargetPlayerTag, Found);
+		for (AActor* Actor : Found)
+		{
+			ASotugyouSeisakuCharacter* C = Cast<ASotugyouSeisakuCharacter>(Actor);
+			if (C)
+			{
+				mTargetPlayer = C;
+				break;
+			}
+		}
+	}
+
 	//オーバーラップイベントをバインド
 	mTriggerBox->OnComponentBeginOverlap.AddDynamic(this, &AGimmick_PlayerSwitch::OnTriggerBeginOverlap);
 	mTriggerBox->OnComponentEndOverlap.AddDynamic(this, &AGimmick_PlayerSwitch::OnTriggerEndOverlap);
@@ -56,7 +72,7 @@ void AGimmick_PlayerSwitch::Tick(float DeltaTime)
 /// @param PlayerCharacter プレイヤー
 void AGimmick_PlayerSwitch::Interact_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter)
 {
-	if (PlayerCharacter && bPlayerInRange)
+	if (PlayerCharacter && CanInteract_Implementation(PlayerCharacter))
 	{
 		OnInteract(PlayerCharacter);
 	}
@@ -84,8 +100,13 @@ bool AGimmick_PlayerSwitch::CanInteract_Implementation(ASotugyouSeisakuCharacter
 		return false;
 	}
 
-	// 押せる位置にいるかチェック
-	return bPlayerInRange;
+	//オーバーラップ必須フラグ
+	if (bRequireOverlap && !bPlayerInRange)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 /// @brief インタラクト中にテキストを出す関数
@@ -149,8 +170,6 @@ void AGimmick_PlayerSwitch::OnInteract(ASotugyouSeisakuCharacter* InteractingPla
 
 	if (TimeSinceLastSwitch < mSwitchCooldown)
 	{
-		float RemainingTime = mSwitchCooldown - TimeSinceLastSwitch;
-
 		return;
 	}
 
@@ -199,8 +218,16 @@ void AGimmick_PlayerSwitch::SwitchPlayer(ASotugyouSeisakuCharacter* NewPlayer, A
 		return;
 	}
 
-	//プレイヤーコントローラーを取得
-	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	//PlayerController取得する
+	APlayerController* PC = nullptr;
+	if (OldPlayer && OldPlayer->GetController())
+	{
+		PC = Cast<APlayerController>(OldPlayer->GetController());
+	}
+	if (!PC)
+	{
+		PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	}
 	if (!PC)
 	{
 		return;
@@ -226,7 +253,7 @@ void AGimmick_PlayerSwitch::SwitchPlayer(ASotugyouSeisakuCharacter* NewPlayer, A
 		}
 
 		//コントローラーを解除
-		OldPlayer->GetController()->UnPossess();
+		PC->UnPossess();
 	}
 
 	//新しいプレイヤーを操作

@@ -1,6 +1,5 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "Gimmick_PlayerSwitch.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
@@ -15,7 +14,7 @@
 /// @brief コンストラクタ　プレイヤー切り替えギミックの各種設定
 AGimmick_PlayerSwitch::AGimmick_PlayerSwitch()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	//ルートコンポーネント作成
@@ -40,20 +39,14 @@ AGimmick_PlayerSwitch::AGimmick_PlayerSwitch()
 void AGimmick_PlayerSwitch::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	//ランタイムでターゲットプレイヤーをタグで探す
-	if (!mTargetPlayer && !mTargetPlayerTag.IsNone())
+
+	//PlayerAが設定されていない場合、デフォルトポーンを自動取得
+	if (!mPlayerA)
 	{
-		TArray<AActor*> Found;
-		UGameplayStatics::GetAllActorsWithTag(GetWorld(), mTargetPlayerTag, Found);
-		for (AActor* Actor : Found)
+		AActor* DefaultPawn = UGameplayStatics::GetPlayerCharacter(GetWorld(), 0);
+		if (DefaultPawn)
 		{
-			ASotugyouSeisakuCharacter* C = Cast<ASotugyouSeisakuCharacter>(Actor);
-			if (C)
-			{
-				mTargetPlayer = C;
-				break;
-			}
+			mPlayerA = Cast<ASotugyouSeisakuCharacter>(DefaultPawn);
 		}
 	}
 
@@ -72,7 +65,7 @@ void AGimmick_PlayerSwitch::Tick(float DeltaTime)
 /// @param PlayerCharacter プレイヤー
 void AGimmick_PlayerSwitch::Interact_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter)
 {
-	if (PlayerCharacter && CanInteract_Implementation(PlayerCharacter))
+	if (PlayerCharacter && bPlayerInRange)
 	{
 		OnInteract(PlayerCharacter);
 	}
@@ -88,7 +81,7 @@ bool AGimmick_PlayerSwitch::CanInteract_Implementation(ASotugyouSeisakuCharacter
 		return false;
 	}
 
-	if (!mTargetPlayer)
+	if (!mPlayerA || !mPlayerB)
 	{
 		return false;
 	}
@@ -100,13 +93,8 @@ bool AGimmick_PlayerSwitch::CanInteract_Implementation(ASotugyouSeisakuCharacter
 		return false;
 	}
 
-	//オーバーラップ必須フラグ
-	if (bRequireOverlap && !bPlayerInRange)
-	{
-		return false;
-	}
-
-	return true;
+	// 範囲内にいるかチェック
+	return bPlayerInRange;
 }
 
 /// @brief インタラクト中にテキストを出す関数
@@ -131,7 +119,7 @@ void AGimmick_PlayerSwitch::OnTriggerBeginOverlap(UPrimitiveComponent* Overlappe
 		bPlayerInRange = true;
 		mCurrentPlayer = Player;
 
-		// プレイヤーにこの切り替えポイントを登録
+		//プレイヤーにこの切り替えポイントを登録
 		Player->SetNearbySwitch(this);
 	}
 }
@@ -148,7 +136,7 @@ void AGimmick_PlayerSwitch::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedC
 	{
 		bPlayerInRange = false;
 
-		// プレイヤーから切り替えポイントの登録を解除
+		//プレイヤーから切り替えポイントの登録を解除
 		Player->SetNearbySwitch(nullptr);
 
 		mCurrentPlayer = nullptr;
@@ -159,75 +147,74 @@ void AGimmick_PlayerSwitch::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedC
 /// @param InteractingPlayer Fキーを入力したプレイヤークラス
 void AGimmick_PlayerSwitch::OnInteract(ASotugyouSeisakuCharacter* InteractingPlayer)
 {
-	if (!mTargetPlayer)
+	if (!mPlayerA || !mPlayerB)
 	{
 		return;
 	}
 
-	//クールダウンチェック：最後の切り替えから一定時間経っているか
+	//クールダウンチェック
 	float CurrentTime = GetWorld()->GetTimeSeconds();
 	float TimeSinceLastSwitch = CurrentTime - mLastSwitchTime;
 
 	if (TimeSinceLastSwitch < mSwitchCooldown)
 	{
+		float RemainingTime = mSwitchCooldown - TimeSinceLastSwitch;
 		return;
 	}
 
-	//初回使用時：オリジナルプレイヤーを記録
-	if (mOriginalPlayer == nullptr)
+	//現在操作中のプレイヤーを判定して、適切な関数を呼ぶ
+	if (InteractingPlayer == mPlayerA)
 	{
-		mOriginalPlayer = InteractingPlayer;
+		//PlayerA → PlayerB
+		SwitchFromAtoB();
 	}
-
-	//現在操作中のプレイヤーによって切り替え先を決定
-	ASotugyouSeisakuCharacter* NextPlayer = nullptr;
-
-	if (InteractingPlayer == mOriginalPlayer)
+	else if (InteractingPlayer == mPlayerB)
 	{
-		//オリジナルプレイヤー → ターゲットプレイヤーへ
-		NextPlayer = mTargetPlayer;
-	}
-	else if (InteractingPlayer == mTargetPlayer)
-	{
-		//ターゲットプレイヤー → オリジナルプレイヤーへ
-		NextPlayer = mOriginalPlayer;
+		//PlayerB → PlayerA
+		SwitchFromBtoA();
 	}
 	else
 	{
-		//想定外のプレイヤー（念のため）
 		return;
 	}
-
-	//自分自身に切り替えようとしている場合は無視
-	if (InteractingPlayer == NextPlayer)
-	{
-		return;
-	}
-
-	SwitchPlayer(NextPlayer, InteractingPlayer);
 
 	//最後の切り替え時刻を更新
 	mLastSwitchTime = CurrentTime;
 }
 
-/// @brief 操作プレイヤーを入れ替える関数
-void AGimmick_PlayerSwitch::SwitchPlayer(ASotugyouSeisakuCharacter* NewPlayer, ASotugyouSeisakuCharacter* OldPlayer)
+/// @brief PlayerAからPlayerBへ切り替える
+void AGimmick_PlayerSwitch::SwitchFromAtoB()
 {
-	if (!NewPlayer)
+	if (!mPlayerA || !mPlayerB)
+	{
+		return;
+	}
+	PerformSwitch(mPlayerB, mPlayerA);
+}
+
+/// @brief PlayerBからPlayerAへ切り替える
+void AGimmick_PlayerSwitch::SwitchFromBtoA()
+{
+	if (!mPlayerA || !mPlayerB)
 	{
 		return;
 	}
 
-	//PlayerController取得する
-	APlayerController* PC = nullptr;
-	if (OldPlayer && OldPlayer->GetController())
+	PerformSwitch(mPlayerA, mPlayerB);
+}
+
+/// @brief 実際の切り替え処理を行う
+/// @param NewPlayer 切り替え先のプレイヤー
+/// @param OldPlayer 切り替え前のプレイヤー
+void AGimmick_PlayerSwitch::PerformSwitch(ASotugyouSeisakuCharacter* NewPlayer, ASotugyouSeisakuCharacter* OldPlayer)
+{
+	if (!NewPlayer || !OldPlayer)
 	{
-		PC = Cast<APlayerController>(OldPlayer->GetController());
+		return;
 	}
-	if (!PC)
-	{
-		PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	}
+
+	//プレイヤーコントローラーを取得
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	if (!PC)
 	{
 		return;
@@ -253,10 +240,9 @@ void AGimmick_PlayerSwitch::SwitchPlayer(ASotugyouSeisakuCharacter* NewPlayer, A
 		}
 
 		//コントローラーを解除
-		PC->UnPossess();
+		OldPlayer->GetController()->UnPossess();
 	}
 
-	//新しいプレイヤーを操作
 	PC->Possess(NewPlayer);
 
 	//新しいプレイヤーの状態をクリア
@@ -269,8 +255,7 @@ void AGimmick_PlayerSwitch::SwitchPlayer(ASotugyouSeisakuCharacter* NewPlayer, A
 		NewPlayer->GetInteractWidget()->HideWidget();
 	}
 
-	// 切り替え直後はインタラクトチェックを少し遅延させる
-	// これにより、切り替え直後の誤検出を防ぐ
+	//切り替え直後はインタラクトチェックを少し遅延させる
 	GetWorld()->GetTimerManager().SetTimerForNextTick([NewPlayer]()
 		{
 			if (NewPlayer)
@@ -279,4 +264,3 @@ void AGimmick_PlayerSwitch::SwitchPlayer(ASotugyouSeisakuCharacter* NewPlayer, A
 			}
 		});
 }
-

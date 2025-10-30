@@ -51,35 +51,39 @@ public:
 	void OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	//切り替え先のプレイヤーキャラクター
-	UPROPERTY(EditAnywhere, Category = "Switch Settings")
-	ASotugyouSeisakuCharacter* mTargetPlayer;
+	//2つのプレイヤーを設定
+	UPROPERTY(EditAnywhere, Category = "Player Switch", meta = (DisplayName = "Player A"))
+	TObjectPtr<ASotugyouSeisakuCharacter> mPlayerA;
 
-	//最初にこのスイッチを使ったプレイヤー（オリジナル）
+	UPROPERTY(EditAnywhere, Category = "Player Switch", meta = (DisplayName = "Player B"))
+	TObjectPtr<ASotugyouSeisakuCharacter> mPlayerB;
+
+	//現在範囲内にいるプレイヤー
 	UPROPERTY()
-	ASotugyouSeisakuCharacter* mOriginalPlayer = nullptr;
+	TObjectPtr<ASotugyouSeisakuCharacter> mCurrentPlayer;
+
+	UPROPERTY()
+	ASotugyouSeisakuCharacter* CurrentControlledPlayer;
 
 	//クールダウン時間（秒）
 	UPROPERTY(EditAnywhere, Category = "Switch Settings", meta = (ClampMin = "0.0"))
 	float mSwitchCooldown = 1.0f;
 
-	//現在範囲内にいるプレイヤー
-	UPROPERTY()
-	ASotugyouSeisakuCharacter* mCurrentPlayer = nullptr;
-
-	//トリガーオーバーラップを必須にするか
+	//インタラクト可能距離
 	UPROPERTY(EditAnywhere, Category = "Interaction")
-	bool bRequireOverlap = true;
-
-	//エディタで設定する代替識別子
-	UPROPERTY(EditAnywhere, Category = "Switch Settings", meta = (DisplayName = "Target Player Tag"))
-	FName mTargetPlayerTag;
-
-	//プレイヤーを切り替える
-	void SwitchPlayer(ASotugyouSeisakuCharacter* NewPlayer, ASotugyouSeisakuCharacter* OldPlayer);
+	float mInteractDistance = 200.0f;
 
 	//プレイヤーが範囲内でFキーを押したときに呼ばれる
 	void OnInteract(ASotugyouSeisakuCharacter* InteractingPlayer);
+
+	//PlayerAからPlayerBへ切り替える
+	void SwitchFromAtoB();
+
+	//PlayerBからPlayerAへ切り替える
+	void SwitchFromBtoA();
+
+	//実際の切り替え処理を行う
+	void PerformSwitch(ASotugyouSeisakuCharacter* NewPlayer, ASotugyouSeisakuCharacter* OldPlayer);
 
 	//クールダウン用：最後に切り替えた時刻
 	float mLastSwitchTime = 0.0f;
@@ -87,7 +91,5 @@ public:
 	//プレイヤーが範囲内にいるか
 	bool bPlayerInRange = false;
 
-	//インタラクト可能距離
-	UPROPERTY(EditAnywhere, Category = "Interaction")
-	float mInteractDistance = 200.0f;
+	bool bIsSwitching = false;
 };

@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "InteractWidget.h"
+#include "SwitchManager.h"
 
 // Sets default values
 
@@ -199,7 +200,6 @@ void AGimmick_PlayerSwitch::SwitchFromBtoA()
 	{
 		return;
 	}
-
 	PerformSwitch(mPlayerA, mPlayerB);
 }
 
@@ -212,6 +212,14 @@ void AGimmick_PlayerSwitch::PerformSwitch(ASotugyouSeisakuCharacter* NewPlayer, 
 	{
 		return;
 	}
+
+	USwitchManager* Manager = USwitchManager::Get(GetWorld());
+	if (Manager->IsRecentlyUsed())
+	{
+		return;//全スイッチ共通クールタイム中なら何もしない
+	}
+
+	Manager->RegisterSwitchUsage();//今使ったことを記録
 
 	//プレイヤーコントローラーを取得
 	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
@@ -239,8 +247,11 @@ void AGimmick_PlayerSwitch::PerformSwitch(ASotugyouSeisakuCharacter* NewPlayer, 
 			Movement->StopMovementImmediately();
 		}
 
-		//コントローラーを解除
-		OldPlayer->GetController()->UnPossess();
+		if (AController* OldController = OldPlayer->GetController())
+		{
+			//コントローラーを解除
+			OldController->UnPossess();
+		}
 	}
 
 	PC->Possess(NewPlayer);
@@ -256,11 +267,12 @@ void AGimmick_PlayerSwitch::PerformSwitch(ASotugyouSeisakuCharacter* NewPlayer, 
 	}
 
 	//切り替え直後はインタラクトチェックを少し遅延させる
-	GetWorld()->GetTimerManager().SetTimerForNextTick([NewPlayer]()
+	FTimerHandle TempHandle;
+	GetWorld()->GetTimerManager().SetTimer(TempHandle, [NewPlayer]()
 		{
 			if (NewPlayer)
 			{
 				NewPlayer->UpdateInteractUI();
 			}
-		});
+		}, 0.1f, false);
 }

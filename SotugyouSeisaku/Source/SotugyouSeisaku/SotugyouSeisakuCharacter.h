@@ -17,6 +17,8 @@ struct FInputActionValue;
 class AGimmick_PlayerSwitch;
 class AGimmick_FallFloorManager;
 class UInteractWidget;
+class AWireNode;
+class AWireConnection;
 
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -112,6 +114,18 @@ public:
 	UFUNCTION()
 	void UpdateInteractUI();
 
+	//ワイヤーを持つ状態を設定
+	UFUNCTION(BlueprintCallable, Category = "Wire")
+	void SetCarryingWire(AWireNode* StartNode, AWireConnection* Connection);
+
+	//ワイヤーを持つ状態をクリア
+	UFUNCTION(BlueprintCallable, Category = "Wire")
+	void ClearCarryingWire();
+
+	//ワイヤーを持っているかチェック
+	UFUNCTION(BlueprintCallable, Category = "Wire")
+	bool IsCarryingWire() const { return mCarryingWireStartNode != nullptr; }
+
 	//現在インタラクト可能なオブジェクト
 	UPROPERTY()
 	TScriptInterface<class IInteractable> mCurrentInteractable;
@@ -161,6 +175,14 @@ public:
 	//床のマネージャーへの参照
 	UPROPERTY()
 	TObjectPtr<AGimmick_FallFloorManager> mFloorManager;
+
+	//現在運んでいるワイヤーのスタートノード
+	UPROPERTY(BlueprintReadOnly, Category = "Wire")
+	class AWireNode* mCarryingWireStartNode;
+
+	//現在運んでいるワイヤーの接続オブジェクト
+	UPROPERTY(BlueprintReadOnly, Category = "Wire")
+	class AWireConnection* mCarryingWireConnection;
 
 	//プレイヤーがギミックブロックを押しているかどうか
 	bool bIsPushing = false;

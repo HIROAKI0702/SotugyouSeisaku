@@ -34,6 +34,10 @@ AGimmick_PlayerSwitch::AGimmick_PlayerSwitch()
 
 	//インタラクト可能距離
 	mInteractDistance = 200.0f;
+
+	//切り替え後の無効化時間
+	mPostSwitchDisableTime = 0.5f;
+	bIsTemporarilyDisabled = false;
 }
 
 // Called when the game starts or when spawned
@@ -66,7 +70,7 @@ void AGimmick_PlayerSwitch::Tick(float DeltaTime)
 /// @param PlayerCharacter プレイヤー
 void AGimmick_PlayerSwitch::Interact_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter)
 {
-	if (PlayerCharacter && bPlayerInRange)
+	if (PlayerCharacter && bPlayerInRange && !bIsTemporarilyDisabled)
 	{
 		OnInteract(PlayerCharacter);
 	}
@@ -87,6 +91,12 @@ bool AGimmick_PlayerSwitch::CanInteract_Implementation(ASotugyouSeisakuCharacter
 		return false;
 	}
 
+	//一時的に無効化されている場合
+	if (bIsTemporarilyDisabled)
+	{
+		return false;
+	}
+
 	//距離チェック
 	float Distance = FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation());
 	if (Distance > mInteractDistance)
@@ -102,6 +112,10 @@ bool AGimmick_PlayerSwitch::CanInteract_Implementation(ASotugyouSeisakuCharacter
 /// @return プレイヤーがインタラクトしているかどうかを返す
 FText AGimmick_PlayerSwitch::GetInteractText_Implementation() const
 {
+	if (bIsTemporarilyDisabled)
+	{
+		return FText::FromString(TEXT("Wait..."));
+	}
 	return FText::FromString(TEXT("Switch Player"));
 }
 
@@ -117,6 +131,12 @@ void AGimmick_PlayerSwitch::OnTriggerBeginOverlap(UPrimitiveComponent* Overlappe
 {
 	if (ASotugyouSeisakuCharacter* Player = Cast<ASotugyouSeisakuCharacter>(OtherActor))
 	{
+		//一時的に無効化されている場合は登録しない
+		if (bIsTemporarilyDisabled)
+		{
+			return;
+		}
+
 		bPlayerInRange = true;
 		mCurrentPlayer = Player;
 
@@ -149,6 +169,12 @@ void AGimmick_PlayerSwitch::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedC
 void AGimmick_PlayerSwitch::OnInteract(ASotugyouSeisakuCharacter* InteractingPlayer)
 {
 	if (!mPlayerA || !mPlayerB)
+	{
+		return;
+	}
+
+	//一時的に無効化されている場合は何もしない
+	if (bIsTemporarilyDisabled)
 	{
 		return;
 	}
@@ -203,6 +229,12 @@ void AGimmick_PlayerSwitch::SwitchFromBtoA()
 	PerformSwitch(mPlayerA, mPlayerB);
 }
 
+/// @brief 切り替え後の一時的な無効化を解除する
+void AGimmick_PlayerSwitch::EnableSwitch()
+{
+	bIsTemporarilyDisabled = false;
+}
+
 /// @brief 実際の切り替え処理を行う
 /// @param NewPlayer 切り替え先のプレイヤー
 /// @param OldPlayer 切り替え前のプレイヤー
@@ -227,6 +259,20 @@ void AGimmick_PlayerSwitch::PerformSwitch(ASotugyouSeisakuCharacter* NewPlayer, 
 	{
 		return;
 	}
+
+	//切り替え前に両方のプレイヤーから登録を解除
+	if (mPlayerA)
+	{
+		mPlayerA->SetNearbySwitch(nullptr);
+	}
+	if (mPlayerB)
+	{
+		mPlayerB->SetNearbySwitch(nullptr);
+	}
+
+	//スイッチを一時的に無効化
+	bIsTemporarilyDisabled = true;
+	bPlayerInRange = false;
 
 	//古いプレイヤーの処理
 	if (OldPlayer)
@@ -260,7 +306,7 @@ void AGimmick_PlayerSwitch::PerformSwitch(ASotugyouSeisakuCharacter* NewPlayer, 
 	NewPlayer->mCurrentInteractable.SetObject(nullptr);
 	NewPlayer->mCurrentInteractable.SetInterface(nullptr);
 
-	//新しいプレイヤーのウィジェットを確実に非表示
+	//新しいプレイヤーのウィジェットを非表示
 	if (NewPlayer->GetInteractWidget())
 	{
 		NewPlayer->GetInteractWidget()->HideWidget();
@@ -275,4 +321,9 @@ void AGimmick_PlayerSwitch::PerformSwitch(ASotugyouSeisakuCharacter* NewPlayer, 
 				NewPlayer->UpdateInteractUI();
 			}
 		}, 0.1f, false);
+
+	//一定時間後にスイッチを再度有効化
+	FTimerHandle EnableHandle;
+	GetWorld()->GetTimerManager().SetTimer(EnableHandle, this,
+		&AGimmick_PlayerSwitch::EnableSwitch, mPostSwitchDisableTime, false);
 }

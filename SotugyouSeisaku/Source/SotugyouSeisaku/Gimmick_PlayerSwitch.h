@@ -73,6 +73,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Interaction")
 	float mInteractDistance = 200.0f;
 
+	//切り替え後の一時的な無効化時間
+	UPROPERTY(EditAnywhere, Category = "Switch Settings")
+	float mPostSwitchDisableTime;
+
 	//プレイヤーが範囲内でFキーを押したときに呼ばれる
 	void OnInteract(ASotugyouSeisakuCharacter* InteractingPlayer);
 
@@ -85,6 +89,9 @@ public:
 	//実際の切り替え処理を行う
 	void PerformSwitch(ASotugyouSeisakuCharacter* NewPlayer, ASotugyouSeisakuCharacter* OldPlayer);
 
+	//スイッチを再度有効化する関数
+	void EnableSwitch();
+
 	//クールダウン用：最後に切り替えた時刻
 	float mLastSwitchTime = 0.0f;
 
@@ -92,4 +99,7 @@ public:
 	bool bPlayerInRange = false;
 
 	bool bIsSwitching = false;
+
+	//スイッチが一時的に無効化されているか
+	bool bIsTemporarilyDisabled;
 };

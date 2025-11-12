@@ -444,3 +444,19 @@ void ASotugyouSeisakuCharacter::UnPossessed()
 		mInteractWidget->HideWidget();
 	}
 }
+
+/// @brief ワイヤーを持つ状態を設定
+/// @param StartNode ワイヤーのスタートノード
+/// @param Connection ワイヤーの接続オブジェクト
+void ASotugyouSeisakuCharacter::SetCarryingWire(AWireNode* StartNode, AWireConnection* Connection)
+{
+	mCarryingWireStartNode = StartNode;
+	mCarryingWireConnection = Connection;
+}
+
+/// @brief ワイヤーを持つ状態をクリア
+void ASotugyouSeisakuCharacter::ClearCarryingWire()
+{
+	mCarryingWireStartNode = nullptr;
+	mCarryingWireConnection = nullptr;
+}

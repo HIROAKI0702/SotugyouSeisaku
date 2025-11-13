@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -7,20 +7,25 @@
 #include "WireNode.h"
 #include "WirePuzzleManager.generated.h"
 
+//ワイヤーのペア情報を保持する構造体
 USTRUCT(BlueprintType)
 struct FWirePair
 {
 	GENERATED_BODY()
 
+	//スタートノード
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class AWireNode* StartNode;
+	TObjectPtr<AWireNode> StartNode;
 
+	//エンドノード
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class AWireNode* EndNode;
+	TObjectPtr<AWireNode> EndNode;
 
+	//必要な色
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EWireColor RequiredColor;
 
+	//ペアID
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	int32 PairID;
 
@@ -54,56 +59,72 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	//�ݒ�
+	//正解のワイヤーペアのリスト
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Puzzle Settings")
 	TArray<FWirePair> mWirePairs;
 
+	//パズル完了時に開くドア
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Puzzle Settings")
 	AActor* mTargetDoor;
 
+	//間違った接続をした時にリセットするか
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Puzzle Settings")
 	bool bResetOnWrongConnection;
 
+	//ワイヤー接続のクラス
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Puzzle Settings")
 	TSubclassOf<class AWireConnection> mWireConnectionClass;
 
+	//ドアの移動オフセット
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Settings")
 	FVector mDoorMoveOffset;
 
+	//ドアの移動速度
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Door Settings")
 	float mDoorMoveSpeed;
 
-	//���
+	//���
 	UPROPERTY(BlueprintReadOnly, Category = "Puzzle State")
 	bool bPuzzleCompleted;
 
-	//�֐�
+	//ワイヤーの接続を登録
 	UFUNCTION(BlueprintCallable, Category = "Puzzle")
 	void RegisterConnection(AWireNode* StartNode, AWireNode* EndNode, ASotugyouSeisakuCharacter* Player);
 
+	//パズルの完了状態をチェック
 	UFUNCTION(BlueprintCallable, Category = "Puzzle")
 	void CheckPuzzleCompletion();
 
+	//パズルをリセット
 	UFUNCTION(BlueprintCallable, Category = "Puzzle")
 	void ResetPuzzle();
 
+	//パズル成功時に呼ばれる
 	UFUNCTION(BlueprintCallable, Category = "Puzzle")
 	void OnPuzzleSuccess();
 
+	//パズル失敗時に呼ばれる
 	UFUNCTION(BlueprintCallable, Category = "Puzzle")
 	void OnPuzzleFailure();
 
+	//ワールド内のマネージャーインスタンスを取得
 	UFUNCTION(BlueprintCallable, Category = "Puzzle")
 	static AWirePuzzleManager* Get(UWorld* World);
 
 private:
+	//ノードを初期化
 	void InitializeNodes();
+	//ドアを動かす
 	void MoveDoor(float DeltaTime);
 
+	//ドアの初期位置
 	FVector mDoorOriginalPosition;
+	//ドアの目標位置
 	FVector mDoorTargetPosition;
+	//ドアが開いているか
 	bool bDoorOpen;
 
+	//現在アクティブなワイヤー接続のリスト
 	UPROPERTY()
 	TArray<class AWireConnection*> mActiveConnections;
 };

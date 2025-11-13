@@ -419,6 +419,17 @@ void ASotugyouSeisakuCharacter::RespawnPlayer()
 /// @brief 切り替えポイントにインタラクトする関数
 void ASotugyouSeisakuCharacter::TryInteract()
 {
+	//汎用インタラクトシステム（ワイヤーノード、ボタンなど）
+	if (mCurrentInteractable.GetInterface())
+	{
+		AActor* InteractableActor = Cast<AActor>(mCurrentInteractable.GetObject());
+		if (InteractableActor)
+		{
+			IInteractable::Execute_Interact(InteractableActor, this);
+			return;//インタラクトしたら終了
+		}
+	}
+
 	//近くに切り替えポイントがあればインタラクト
 	if (mNearbySwitchPoint)
 	{

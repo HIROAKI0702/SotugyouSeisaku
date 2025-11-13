@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -7,7 +7,9 @@
 #include "Interactable.h"
 #include "WireNode.generated.h"
 
-//�����̐F���`
+class UBoxComponent;
+
+//導線の色を定義する列挙型
 UENUM(BlueprintType)
 enum class EWireColor : uint8
 {
@@ -18,7 +20,7 @@ enum class EWireColor : uint8
 	Purple UMETA(DisplayName = "Purple")
 };
 
-//�m�[�h�̃^�C�v
+//ノードのタイプを定義する列挙型
 UENUM(BlueprintType)
 enum class EWireNodeType : uint8
 {
@@ -31,15 +33,15 @@ class SOTUGYOUSEISAKU_API AWireNode : public AActor,public IInteractable
 {
 	GENERATED_BODY()
 
-	//�R���|�[�l���g
+	//ルートコンポーネント
 	UPROPERTY(VisibleAnywhere)
-	USceneComponent* mRoot;
+	TObjectPtr<USceneComponent> mRoot;
 
 	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* mMesh;
+	TObjectPtr<UStaticMeshComponent> mMesh;
 
 	UPROPERTY(VisibleAnywhere)
-	class UBoxComponent* mInteractTrigger;
+	TObjectPtr<UBoxComponent> mInteractTrigger;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -53,12 +55,12 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	//�C���^���N�g�C���^�[�t�F�[�X����
+	//インタラクトインターフェース実装
 	virtual void Interact_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter) override;
 	virtual bool CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter) const override;
 	virtual FText GetInteractText_Implementation() const override;
 
-	//�ݒ�
+	//設定
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wire Settings")
 	EWireColor mWireColor;
 
@@ -71,34 +73,38 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wire Settings")
 	float mInteractDistance;
 
-	//���
+	//ワイヤーが接続されているか
 	UPROPERTY(BlueprintReadOnly, Category = "Wire State")
 	bool bIsConnected;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Wire State")
 	AWireNode* mConnectedNode;
 
-	//���C���[�������Ă��邩
+	//このノードがワイヤーを持っているか（スタートノードのみ）
 	UPROPERTY(BlueprintReadOnly, Category = "Wire State")
 	bool bHasWire;
 
-	//�֐�
+	//ワイヤーを拾う（スタートノード用）
 	UFUNCTION(BlueprintCallable, Category = "Wire")
 	void PickupWire(ASotugyouSeisakuCharacter* Player);
 
+	//ワイヤーを接続する（エンドノード用）
 	UFUNCTION(BlueprintCallable, Category = "Wire")
 	void ConnectWire(ASotugyouSeisakuCharacter* Player);
 
+	//ワイヤーの接続を解除する
 	UFUNCTION(BlueprintCallable, Category = "Wire")
 	void Disconnect();
 
+	//指定したノードと接続可能かチェック
 	UFUNCTION(BlueprintCallable, Category = "Wire")
 	bool CanConnectTo(AWireNode* TargetNode) const;
 
+	//ワイヤーの色を取得（FLinearColor形式）
 	UFUNCTION(BlueprintCallable, Category = "Wire")
 	FLinearColor GetWireColorValue() const;
 
-	//�I�[�o�[���b�v�C�x���g
+	//オーバーラップイベント
 	UFUNCTION()
 	void OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
@@ -108,6 +114,8 @@ public:
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 private:
+	//プレイヤーが範囲内にいるか
 	bool bPlayerInRange;
+	//範囲内にいる現在のプレイヤー
 	class ASotugyouSeisakuCharacter* mCurrentPlayer;
 };

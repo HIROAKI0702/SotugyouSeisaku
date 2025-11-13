@@ -1,33 +1,25 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
-#include "WireConnection.h"
+ï»¿#include "WireConnection.h"
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
 #include "WireNode.h"
 #include "SotugyouSeisakuCharacter.h"
 
-// Sets default values
-
-/// @brief ƒRƒ“ƒXƒgƒ‰ƒNƒ^@Šeíİ’è
+/// @brief ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã€€ãƒ¯ã‚¤ãƒ¤ãƒ¼æ¥ç¶šã®å„ç¨®è¨­å®š
 AWireConnection::AWireConnection()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	//æ¯ãƒ•ãƒ¬ãƒ¼ãƒ Tickã‚’å‘¼ã¶
 	PrimaryActorTick.bCanEverTick = true;
 
-	//ƒ‹[ƒgƒRƒ“ƒ|[ƒlƒ“ƒgì¬
+	//ãƒ«ãƒ¼ãƒˆã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆä½œæˆ
 	mRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 	RootComponent = mRoot;
 
-	//ƒXƒvƒ‰ƒCƒ“ƒRƒ“ƒ|[ƒlƒ“ƒgì¬iƒƒCƒ„[‚ÌƒpƒX‚ğ’è‹`j
+	//ã‚¹ãƒ—ãƒ©ã‚¤ãƒ³ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆä½œæˆï¼ˆãƒ¯ã‚¤ãƒ¤ãƒ¼ã®ãƒ‘ã‚¹ã‚’å®šç¾©ï¼‰
 	mSpline = CreateDefaultSubobject<USplineComponent>(TEXT("Spline"));
 	mSpline->SetupAttachment(RootComponent);
 
-	mSplineMesh = CreateDefaultSubobject<USplineMeshComponent>(TEXT("SplineMesh"));
-	mSplineMesh->SetupAttachment(RootComponent);
-
-	//ƒfƒtƒHƒ‹ƒg’l‚ğİ’è
-	mWireThickness = 5.0f;
+	//ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆå€¤ã‚’è¨­å®š
+	mWireThickness = 0.2f;
 	mStartNode = nullptr;
 	mEndNode = nullptr;
 	mCarryingPlayer = nullptr;
@@ -35,29 +27,29 @@ AWireConnection::AWireConnection()
 	bAttachedToPlayer = false;
 }
 
-// Called when the game starts or when spawned
+/// @brief ã‚²ãƒ¼ãƒ é–‹å§‹æ™‚ã«å‘¼ã°ã‚Œã‚‹åˆæœŸåŒ–å‡¦ç†
 void AWireConnection::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
-// Called every frame
+/// @brief æ¯ãƒ•ãƒ¬ãƒ¼ãƒ å‘¼ã°ã‚Œã‚‹æ›´æ–°å‡¦ç†
+/// @param DeltaTime å‰ãƒ•ãƒ¬ãƒ¼ãƒ ã‹ã‚‰ã®çµŒéæ™‚é–“
 void AWireConnection::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//ƒvƒŒƒCƒ„[‚ª‚Á‚Ä‚¢‚éê‡Aí‚ÉƒƒCƒ„[‚ÌˆÊ’u‚ğXV
+	//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒæŒã£ã¦ã„ã‚‹å ´åˆã€å¸¸ã«ãƒ¯ã‚¤ãƒ¤ãƒ¼ã®ä½ç½®ã‚’æ›´æ–°
 	if (bAttachedToPlayer && mCarryingPlayer)
 	{
 		UpdateWireVisuals();
 	}
 }
 
-/// @brief ƒƒCƒ„[‚ÌÚ‘±‚ğİ’è
-/// @param StartNode ŠJnƒm[ƒh
-/// @param EndNode I—¹ƒm[ƒhinull‚Ìê‡‚ÍƒvƒŒƒCƒ„[‚ª‚Á‚Ä‚¢‚éó‘Ôj
-/// @param Player ƒƒCƒ„[‚ğ‚Á‚Ä‚¢‚éƒvƒŒƒCƒ„[inull‚Ìê‡‚ÍÚ‘±Ï‚İj
+/// @brief ãƒ¯ã‚¤ãƒ¤ãƒ¼ã®æ¥ç¶šã‚’è¨­å®š
+/// @param StartNode é–‹å§‹ãƒãƒ¼ãƒ‰
+/// @param EndNode çµ‚äº†ãƒãƒ¼ãƒ‰ï¼ˆnullã®å ´åˆã¯ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒæŒã£ã¦ã„ã‚‹çŠ¶æ…‹ï¼‰
+/// @param Player ãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æŒã£ã¦ã„ã‚‹ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ï¼ˆnullã®å ´åˆã¯æ¥ç¶šæ¸ˆã¿ï¼‰
 void AWireConnection::SetupConnection(AWireNode* StartNode, AWireNode* EndNode, ASotugyouSeisakuCharacter* Player)
 {
 	if (!StartNode)
@@ -69,74 +61,164 @@ void AWireConnection::SetupConnection(AWireNode* StartNode, AWireNode* EndNode, 
 	mEndNode = EndNode;
 	mCarryingPlayer = Player;
 
-	//ƒXƒvƒ‰ƒCƒ“‚ğƒNƒŠƒA‚µ‚ÄV‚µ‚¢ƒ|ƒCƒ“ƒg‚ğ’Ç‰Á
+	//ã‚¹ãƒ—ãƒ©ã‚¤ãƒ³ã‚’ã‚¯ãƒªã‚¢ã—ã¦æ–°ã—ã„ãƒã‚¤ãƒ³ãƒˆã‚’è¿½åŠ 
 	mSpline->ClearSplinePoints();
 	mSpline->AddSplinePoint(StartNode->GetActorLocation(), ESplineCoordinateSpace::World);
 
 	if (EndNode)
 	{
-		//Ú‘±Š®—¹FƒGƒ“ƒhƒm[ƒh‚Ü‚Åü‚ğˆø‚­
+		//æ¥ç¶šå®Œäº†æ™‚ï¼šã‚¨ãƒ³ãƒ‰ãƒãƒ¼ãƒ‰ã¾ã§ç·šã‚’å¼•ã
 		mSpline->AddSplinePoint(EndNode->GetActorLocation(), ESplineCoordinateSpace::World);
 		bAttachedToPlayer = false;
 	}
 	else if (Player)
 	{
-		//ƒvƒŒƒCƒ„[‚ª‚Á‚Ä‚¢‚éFƒvƒŒƒCƒ„[‚Ìè‚Ü‚Åü‚ğˆø‚­
+		//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒæŒã£ã¦ã„ã‚‹æ™‚ï¼šãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®æ‰‹ã¾ã§ç·šã‚’å¼•ã
 		FVector PlayerHandLocation = Player->GetActorLocation() + FVector(0, 0, 100.0f);
 		mSpline->AddSplinePoint(PlayerHandLocation, ESplineCoordinateSpace::World);
 		bAttachedToPlayer = true;
 	}
 
-	//ƒƒCƒ„[‚ÌF‚ğİ’è
+	//ãƒ¯ã‚¤ãƒ¤ãƒ¼ã®è‰²ã‚’è¨­å®š
 	SetWireColor(StartNode->GetWireColorValue());
 
-	//‹Šo“I‚È•\Œ»‚ğXV
+	//SplineMeshComponentã‚’å‹•çš„ã«ç”Ÿæˆ
+	if (!mSplineMesh && mWireMesh)
+	{
+		mSplineMesh = NewObject<USplineMeshComponent>(this, USplineMeshComponent::StaticClass(), TEXT("DynamicSplineMesh"));
+		mSplineMesh->SetMobility(EComponentMobility::Movable);//å¯å‹•ã«è¨­å®š
+		mSplineMesh->AttachToComponent(mRoot, FAttachmentTransformRules::KeepRelativeTransform);
+		mSplineMesh->RegisterComponent();
+		mSplineMesh->SetStaticMesh(mWireMesh);
+		mSplineMesh->SetForwardAxis(ESplineMeshAxis::Z);
+		mSplineMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);//ã‚³ãƒªã‚¸ãƒ§ãƒ³ç„¡åŠ¹åŒ–
+
+		if (mDynamicMaterial)
+		{
+			mSplineMesh->SetMaterial(0, mDynamicMaterial);
+		}
+	}
+
+	//è¦–è¦šçš„ãªè¡¨ç¾ã‚’æ›´æ–°
 	UpdateWireVisuals();
 }
 
-/// @brief ƒƒCƒ„[‚Ì‹Šo“I‚È•\Œ»‚ğXV
+/// @brief ãƒ¯ã‚¤ãƒ¤ãƒ¼ã®è¦–è¦šçš„ãªè¡¨ç¾ã‚’æ›´æ–°
 void AWireConnection::UpdateWireVisuals()
 {
-	if (!mStartNode)
+	if (!mStartNode || !mSpline)
+		return;
+
+	//ã‚¹ã‚¿ãƒ¼ãƒˆã¨ã‚¨ãƒ³ãƒ‰ä½ç½®ã‚’æ›´æ–°
+	FVector StartPos = mStartNode->GetActorLocation();
+	mSpline->SetLocationAtSplinePoint(0, StartPos, ESplineCoordinateSpace::World);
+
+	FVector EndPos;
+	if (mEndNode)
+	{
+		EndPos = mEndNode->GetActorLocation();
+	}
+	else if (bAttachedToPlayer && mCarryingPlayer)
+	{
+		EndPos = mCarryingPlayer->GetActorLocation() + FVector(0, 0, 100.0f);
+
+	}
+	else
 	{
 		return;
 	}
 
-	//ƒXƒ^[ƒg’n“_‚Íí‚ÉŠJnƒm[ƒh‚ÌˆÊ’u‚ÉXV
-	mSpline->SetLocationAtSplinePoint(0, mStartNode->GetActorLocation(), ESplineCoordinateSpace::World);
+    // ã‚¹ãƒ—ãƒ©ã‚¤ãƒ³ã«è‡ªç„¶ãªãŸã‚ã¿ã‚’è¿½åŠ 
+	float Distance = FVector::Distance(StartPos, EndPos);
+	float SagAmount = FMath::Clamp(Distance * 0.1f, 20.0f, 150.0f);//è·é›¢ã«å¿œã˜ãŸãŸã‚ã¿
+	FVector MidPos = (StartPos + EndPos) * 0.5f;
+	MidPos.Z -= SagAmount;//ä¸­å¤®ã‚’ä¸‹æ–¹å‘ã«ãŸã‚ã¾ã›ã‚‹
 
-	if (mEndNode)
+	// åœ°é¢ã®é«˜ã•ã‚’æ¤œå‡ºã—ã¦è²«é€šé˜²æ­¢
+	FHitResult Hit;
+	FVector TraceStart = MidPos + FVector(0, 0, 2000.0f);//ä¸Šã‹ã‚‰
+	FVector TraceEnd = MidPos - FVector(0, 0, 5000.0f);//ä¸‹æ–¹å‘ã«
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+	Params.bTraceComplex = false;
+
+	if (GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, ECC_Visibility, Params))
 	{
-		//Ú‘±Ï‚İ‚Ìê‡FI—¹ƒm[ƒh‚ÌˆÊ’u‚ÉXV
-		mSpline->SetLocationAtSplinePoint(1, mEndNode->GetActorLocation(), ESplineCoordinateSpace::World);
+		float GroundZ = Hit.Location.Z + 10.0f;//åœ°é¢ã‚ˆã‚Šå°‘ã—ä¸Šã«è¨­å®š
+		if (MidPos.Z < GroundZ)
+		{
+			MidPos.Z = GroundZ;
+		}
 	}
-	else if (bAttachedToPlayer && mCarryingPlayer)
+
+	//ã‚¹ãƒ—ãƒ©ã‚¤ãƒ³æ›´æ–°ï¼ˆä¸­é–“ç‚¹ã‚’å«ã‚€3ç‚¹æ§‹æˆï¼‰
+	mSpline->ClearSplinePoints();
+	mSpline->AddSplinePoint(StartPos, ESplineCoordinateSpace::World);
+	mSpline->AddSplinePoint(MidPos, ESplineCoordinateSpace::World);
+	mSpline->AddSplinePoint(EndPos, ESplineCoordinateSpace::World);
+	mSpline->UpdateSpline();
+
+	//æ—¢å­˜ã®SplineMeshã‚’å‰Šé™¤ã—ã¦å†ç”Ÿæˆ
+	for (auto* Comp : mSplineMeshes)
 	{
-		//ƒvƒŒƒCƒ„[‚ª‚Á‚Ä‚¢‚éê‡FƒvƒŒƒCƒ„[‚Ìè‚ÌˆÊ’u‚É’Ç]
-		//TODO: ÀÛ‚Ìè‚Ìƒ\ƒPƒbƒgˆÊ’u‚ğg—p‚·‚éê‡‚Í’²®‚ª•K—v
-		FVector PlayerHandLocation = mCarryingPlayer->GetActorLocation() + FVector(0, 0, 100.0f);
-		mSpline->SetLocationAtSplinePoint(1, PlayerHandLocation, ESplineCoordinateSpace::World);
+		if (Comp)
+			Comp->DestroyComponent();
+	}
+	mSplineMeshes.Empty();
+
+	//å„ã‚¹ãƒ—ãƒ©ã‚¤ãƒ³åŒºé–“ã”ã¨ã«ãƒ¡ãƒƒã‚·ãƒ¥ã‚’ç”Ÿæˆ
+	const int32 NumSegments = mSpline->GetNumberOfSplinePoints() - 1;
+
+	for (int32 i = 0; i < NumSegments; ++i)
+	{
+		USplineMeshComponent* Segment = NewObject<USplineMeshComponent>(this);
+		Segment->SetMobility(EComponentMobility::Movable);
+		Segment->AttachToComponent(mSpline, FAttachmentTransformRules::KeepRelativeTransform);
+		Segment->SetStaticMesh(mWireMesh);
+		Segment->SetForwardAxis(ESplineMeshAxis::Z);
+		Segment->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		//å¤ªã•åæ˜ 
+		FVector2D WireScale(mWireThickness, mWireThickness);
+		Segment->SetStartScale(WireScale);
+		Segment->SetEndScale(WireScale);
+
+		//è‰²åæ˜ 
+		if (mDynamicMaterial)
+			Segment->SetMaterial(0, mDynamicMaterial);
+
+		//ã‚¹ãƒ—ãƒ©ã‚¤ãƒ³åŒºé–“ã”ã¨ã®ä½ç½®ã¨æ¥ç·šã‚’å–å¾—
+		FVector StartPosLocal, StartTangent, EndPosLocal, EndTangent;
+		mSpline->GetLocationAndTangentAtSplinePoint(i, StartPosLocal, StartTangent, ESplineCoordinateSpace::Local);
+		mSpline->GetLocationAndTangentAtSplinePoint(i + 1, EndPosLocal, EndTangent, ESplineCoordinateSpace::Local);
+
+		//ã‚¹ã‚¿ãƒ¼ãƒˆã¨ã‚¨ãƒ³ãƒ‰è¨­å®š
+		Segment->SetStartAndEnd(StartPosLocal, StartTangent, EndPosLocal, EndTangent);
+
+		//ç™»éŒ²ãƒ»è¡¨ç¤º
+		Segment->RegisterComponent();
+		mSplineMeshes.Add(Segment);
 	}
 }
 
-/// @brief ƒƒCƒ„[‚ÌF‚ğİ’è
-/// @param Color İ’è‚·‚éF
+/// @brief ãƒ¯ã‚¤ãƒ¤ãƒ¼ã®è‰²ã‚’è¨­å®š
+/// @param Color è¨­å®šã™ã‚‹è‰²
 void AWireConnection::SetWireColor(FLinearColor Color)
 {
 	if (mWireMaterial)
 	{
-		//“®“Iƒ}ƒeƒŠƒAƒ‹ƒCƒ“ƒXƒ^ƒ“ƒX‚ğì¬
+		//å‹•çš„ãƒãƒ†ãƒªã‚¢ãƒ«ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’ä½œæˆ
 		mDynamicMaterial = UMaterialInstanceDynamic::Create(mWireMaterial, this);
 		if (mDynamicMaterial)
 		{
-			//ƒ}ƒeƒŠƒAƒ‹‚Ì"Color"ƒpƒ‰ƒ[ƒ^‚ÉF‚ğİ’è
+			//ãƒãƒ†ãƒªã‚¢ãƒ«ã®"Color"ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã«è‰²ã‚’è¨­å®š
 			mDynamicMaterial->SetVectorParameterValue(FName("Color"), Color);
 		}
 	}
 }
 
-/// @brief ƒƒCƒ„[‚ğƒvƒŒƒCƒ„[‚ÉƒAƒ^ƒbƒ`
-/// @param Player ƒƒCƒ„[‚ğ‚ÂƒvƒŒƒCƒ„[
+/// @brief ãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã«ã‚¢ã‚¿ãƒƒãƒ
+/// @param Player ãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æŒã¤ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼
 void AWireConnection::AttachToPlayer(ASotugyouSeisakuCharacter* Player)
 {
 	if (!Player)
@@ -147,4 +229,3 @@ void AWireConnection::AttachToPlayer(ASotugyouSeisakuCharacter* Player)
 	mCarryingPlayer = Player;
 	bAttachedToPlayer = true;
 }
-

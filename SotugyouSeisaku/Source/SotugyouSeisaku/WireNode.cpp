@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "WireNode.h"
 #include "Components/StaticMeshComponent.h"
@@ -9,360 +9,358 @@
 
 // Sets default values
 
-/// @brief ƒRƒ“ƒXƒgƒ‰ƒNƒ^@Šeíİ’è
+/// @brief ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã€€ãƒ¯ã‚¤ãƒ¤ãƒ¼ãƒãƒ¼ãƒ‰ã®å„ç¨®è¨­å®š
 AWireNode::AWireNode()
 {
-    // Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-    PrimaryActorTick.bCanEverTick = true;
+	//æ¯ãƒ•ãƒ¬ãƒ¼ãƒ Tickã‚’å‘¼ã¶
+	PrimaryActorTick.bCanEverTick = true;
 
-    //ƒ‹[ƒgƒRƒ“ƒ|[ƒlƒ“ƒgì¬
-    mRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
-    RootComponent = mRoot;
+	//ãƒ«ãƒ¼ãƒˆã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆä½œæˆ
+	mRoot = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+	RootComponent = mRoot;
 
-    //ƒƒbƒVƒ…ƒRƒ“ƒ|[ƒlƒ“ƒgì¬
-    mMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-    mMesh->SetupAttachment(RootComponent);
+	//ãƒ¡ãƒƒã‚·ãƒ¥ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆä½œæˆ
+	mMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+	mMesh->SetupAttachment(RootComponent);
 
-    //ƒCƒ“ƒ^ƒ‰ƒNƒgƒgƒŠƒK[ì¬
-    mInteractTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractTrigger"));
-    mInteractTrigger->SetupAttachment(RootComponent);
-    mInteractTrigger->SetBoxExtent(FVector(100.0f, 100.0f, 100.0f));
-    mInteractTrigger->SetGenerateOverlapEvents(true);
+	//ã‚¤ãƒ³ã‚¿ãƒ©ã‚¯ãƒˆãƒˆãƒªã‚¬ãƒ¼ä½œæˆ
+	mInteractTrigger = CreateDefaultSubobject<UBoxComponent>(TEXT("InteractTrigger"));
+	mInteractTrigger->SetupAttachment(RootComponent);
+	mInteractTrigger->SetBoxExtent(FVector(100.0f, 100.0f, 100.0f));
+	mInteractTrigger->SetGenerateOverlapEvents(true);
 
-    //ƒfƒtƒHƒ‹ƒg’l‚ğİ’è
-    mWireColor = EWireColor::Red;
-    mNodeType = EWireNodeType::Start;
-    mPairID = 0;
-    bIsConnected = false;
-    mConnectedNode = nullptr;
-    bPlayerInRange = false;
-    mCurrentPlayer = nullptr;
-    bHasWire = true;//ƒXƒ^[ƒgƒm[ƒh‚ÍÅ‰‚©‚çƒƒCƒ„[‚ğ‚Á‚Ä‚¢‚é
-    mInteractDistance = 200.0f;
+	//ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆå€¤ã‚’è¨­å®š
+	mWireColor = EWireColor::Red;
+	mNodeType = EWireNodeType::Start;
+	mPairID = 0;
+	bIsConnected = false;
+	mConnectedNode = nullptr;
+	bPlayerInRange = false;
+	mCurrentPlayer = nullptr;
+	bHasWire = true;//ã‚¹ã‚¿ãƒ¼ãƒˆãƒãƒ¼ãƒ‰ã¯æœ€åˆã‹ã‚‰ãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æŒã£ã¦ã„ã‚‹
+	mInteractDistance = 200.0f;
 }
 
-// Called when the game starts or when spawned
+/// @brief ã‚²ãƒ¼ãƒ é–‹å§‹æ™‚ã«å‘¼ã°ã‚Œã‚‹åˆæœŸåŒ–å‡¦ç†
 void AWireNode::BeginPlay()
 {
-    Super::BeginPlay();
+	Super::BeginPlay();
 
-    //ƒI[ƒo[ƒ‰ƒbƒvƒCƒxƒ“ƒg‚ğƒoƒCƒ“ƒh
-    mInteractTrigger->OnComponentBeginOverlap.AddDynamic(this, &AWireNode::OnTriggerBeginOverlap);
-    mInteractTrigger->OnComponentEndOverlap.AddDynamic(this, &AWireNode::OnTriggerEndOverlap);
+	//ã‚ªãƒ¼ãƒãƒ¼ãƒ©ãƒƒãƒ—ã‚¤ãƒ™ãƒ³ãƒˆã‚’ãƒã‚¤ãƒ³ãƒ‰
+	mInteractTrigger->OnComponentBeginOverlap.AddDynamic(this, &AWireNode::OnTriggerBeginOverlap);
+	mInteractTrigger->OnComponentEndOverlap.AddDynamic(this, &AWireNode::OnTriggerEndOverlap);
 
-    //ƒGƒ“ƒhƒm[ƒh‚ÍÅ‰ƒƒCƒ„[‚ğ‚Á‚Ä‚¢‚È‚¢
-    if (mNodeType == EWireNodeType::End)
-    {
-        bHasWire = false;
-    }
+	//ã‚¨ãƒ³ãƒ‰ãƒãƒ¼ãƒ‰ã¯æœ€åˆãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æŒã£ã¦ã„ãªã„
+	if (mNodeType == EWireNodeType::End)
+	{
+		bHasWire = false;
+	}
 
-    //F‚É‰‚¶‚Äƒ}ƒeƒŠƒAƒ‹‚ğ•ÏX
-    if (mMesh && mMesh->GetMaterial(0))
-    {
-        UMaterialInstanceDynamic* DynMat = mMesh->CreateDynamicMaterialInstance(0);
-        if (DynMat)
-        {
-            //ƒ}ƒeƒŠƒAƒ‹‚Ì "Color" ƒpƒ‰ƒ[ƒ^‚ÉF‚ğİ’è
-            DynMat->SetVectorParameterValue(FName("Color"), GetWireColorValue());
-        }
-    }
+	//è‰²ã«å¿œã˜ã¦ãƒãƒ†ãƒªã‚¢ãƒ«ã‚’å¤‰æ›´
+	if (mMesh && mMesh->GetMaterial(0))
+	{
+		UMaterialInstanceDynamic* DynMat = mMesh->CreateDynamicMaterialInstance(0);
+		if (DynMat)
+		{
+			//ãƒãƒ†ãƒªã‚¢ãƒ«ã®"Color"ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã«è‰²ã‚’è¨­å®š
+			DynMat->SetVectorParameterValue(FName("Color"), GetWireColorValue());
+		}
+	}
 }
 
-// Called every frame
+/// @brief æ¯ãƒ•ãƒ¬ãƒ¼ãƒ å‘¼ã°ã‚Œã‚‹æ›´æ–°å‡¦ç†
+/// @param DeltaTime å‰ãƒ•ãƒ¬ãƒ¼ãƒ ã‹ã‚‰ã®çµŒéæ™‚é–“
 void AWireNode::Tick(float DeltaTime)
 {
-    Super::Tick(DeltaTime);
+	Super::Tick(DeltaTime);
 }
 
-/// @brief ƒCƒ“ƒ^[ƒtƒF[ƒXÀ‘• - ƒvƒŒƒCƒ„[‚ªFƒL[‚ğ‰Ÿ‚µ‚½‚Æ‚«‚ÉŒÄ‚Î‚ê‚é
-/// @param PlayerCharacter ƒCƒ“ƒ^ƒ‰ƒNƒg‚µ‚½ƒvƒŒƒCƒ„[
+/// @brief ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹å®Ÿè£… - ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒFã‚­ãƒ¼ã‚’æŠ¼ã—ãŸã¨ãã«å‘¼ã°ã‚Œã‚‹
+/// @param PlayerCharacter ã‚¤ãƒ³ã‚¿ãƒ©ã‚¯ãƒˆã—ãŸãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼
 void AWireNode::Interact_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter)
 {
-    if (!PlayerCharacter || !bPlayerInRange)
-    {
-        return;
-    }
+	if (!PlayerCharacter || !bPlayerInRange)
+	{
+		return;
+	}
 
-    //ƒvƒŒƒCƒ„[‚ªƒƒCƒ„[‚ğ‚Á‚Ä‚¢‚È‚¢ê‡
-    if (!PlayerCharacter->IsCarryingWire())
-    {
-        //‚±‚Ìƒm[ƒh‚ªƒƒCƒ„[‚ğ‚Á‚Ä‚¢‚ÄAƒXƒ^[ƒgƒm[ƒh‚È‚çE‚¦‚é
-        if (bHasWire && mNodeType == EWireNodeType::Start && !bIsConnected)
-        {
-            PickupWire(PlayerCharacter);
-        }
-    }
-    else
-    {
-        //ƒvƒŒƒCƒ„[‚ªƒƒCƒ„[‚ğ‚Á‚Ä‚¢‚éê‡AƒGƒ“ƒhƒm[ƒh‚ÉÚ‘±‚Å‚«‚é
-        if (mNodeType == EWireNodeType::End && !bIsConnected)
-        {
-            ConnectWire(PlayerCharacter);
-        }
-    }
+	//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æŒã£ã¦ã„ãªã„å ´åˆ
+	if (!PlayerCharacter->IsCarryingWire())
+	{
+		//ã“ã®ãƒãƒ¼ãƒ‰ãŒãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æŒã£ã¦ã„ã¦ã€ã‚¹ã‚¿ãƒ¼ãƒˆãƒãƒ¼ãƒ‰ãªã‚‰æ‹¾ãˆã‚‹
+		if (bHasWire && mNodeType == EWireNodeType::Start && !bIsConnected)
+		{
+			PickupWire(PlayerCharacter);
+		}
+	}
+	else
+	{
+		//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æŒã£ã¦ã„ã‚‹å ´åˆã€ã‚¨ãƒ³ãƒ‰ãƒãƒ¼ãƒ‰ã«æ¥ç¶šã§ãã‚‹
+		if (mNodeType == EWireNodeType::End && !bIsConnected)
+		{
+			ConnectWire(PlayerCharacter);
+		}
+	}
 }
 
-/// @brief ƒCƒ“ƒ^ƒ‰ƒNƒg‰Â”\‚©ƒ`ƒFƒbƒN
-/// @param PlayerCharacter ƒ`ƒFƒbƒN‚·‚éƒvƒŒƒCƒ„[
-/// @return ƒCƒ“ƒ^ƒ‰ƒNƒg‰Â”\‚È‚çtrue
+/// @brief ã‚¤ãƒ³ã‚¿ãƒ©ã‚¯ãƒˆå¯èƒ½ã‹ãƒã‚§ãƒƒã‚¯
+/// @param PlayerCharacter ãƒã‚§ãƒƒã‚¯ã™ã‚‹ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼
+/// @return ã‚¤ãƒ³ã‚¿ãƒ©ã‚¯ãƒˆå¯èƒ½ãªã‚‰true
 bool AWireNode::CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerCharacter) const
 {
-    if (!PlayerCharacter || !bPlayerInRange)
-    {
-        return false;
-    }
+	if (!PlayerCharacter || !bPlayerInRange)
+	{
+		return false;
+	}
 
-    //‹——£ƒ`ƒFƒbƒN
-    float Distance = FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation());
-    if (Distance > mInteractDistance)
-    {
-        return false;
-    }
+	//è·é›¢ãƒã‚§ãƒƒã‚¯
+	float Distance = FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation());
+	if (Distance > mInteractDistance)
+	{
+		return false;
+	}
 
-    //‚·‚Å‚ÉÚ‘±‚³‚ê‚Ä‚¢‚éê‡‚ÍƒCƒ“ƒ^ƒ‰ƒNƒg•s‰Â
-    if (bIsConnected)
-    {
-        return false;
-    }
+	//ã™ã§ã«æ¥ç¶šã•ã‚Œã¦ã„ã‚‹å ´åˆ
+	if (bIsConnected)
+	{
+		return false;
+	}
 
-    //ƒvƒŒƒCƒ„[‚ªƒƒCƒ„[‚ğ‚Á‚Ä‚¢‚È‚¢ê‡
-    if (!PlayerCharacter->IsCarryingWire())
-    {
-        return (mNodeType == EWireNodeType::Start && bHasWire);
-    }
-    else
-    {
-        //ƒvƒŒƒCƒ„[‚ªƒƒCƒ„[‚ğ‚Á‚Ä‚¢‚éê‡
-        AWireNode* StartNode = PlayerCharacter->mCarryingWireStartNode;
+	//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æŒã£ã¦ã„ãªã„å ´åˆ
+	if (!PlayerCharacter->IsCarryingWire())
+	{
+		//ã‚¹ã‚¿ãƒ¼ãƒˆãƒãƒ¼ãƒ‰ã§ã€ãƒ¯ã‚¤ãƒ¤ãƒ¼ãŒã‚ã‚‹ãªã‚‰ã‚¤ãƒ³ã‚¿ãƒ©ã‚¯ãƒˆå¯èƒ½
+		return (mNodeType == EWireNodeType::Start && bHasWire);
+	}
+	else
+	{
+		//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æŒã£ã¦ã„ã‚‹å ´åˆ
+		AWireNode* StartNode = PlayerCharacter->mCarryingWireStartNode;
 
-        if (mNodeType == EWireNodeType::End && StartNode)
-        {
-            return (mWireColor == StartNode->mWireColor);
-        }
-    }
+		//ã‚¨ãƒ³ãƒ‰ãƒãƒ¼ãƒ‰ã§ã€è‰²ãŒä¸€è‡´ã™ã‚‹ãªã‚‰ã‚¤ãƒ³ã‚¿ãƒ©ã‚¯ãƒˆå¯èƒ½
+		if (mNodeType == EWireNodeType::End && StartNode)
+		{
+			return (mWireColor == StartNode->mWireColor);
+		}
+	}
 
-    return false;
+	return false;
 }
 
-/// @brief ƒCƒ“ƒ^ƒ‰ƒNƒg‚É•\¦‚·‚éƒeƒLƒXƒg‚ğæ“¾
-/// @return •\¦‚·‚éƒeƒLƒXƒg
+/// @brief ã‚¤ãƒ³ã‚¿ãƒ©ã‚¯ãƒˆæ™‚ã«è¡¨ç¤ºã™ã‚‹ãƒ†ã‚­ã‚¹ãƒˆã‚’å–å¾—
+/// @return è¡¨ç¤ºã™ã‚‹ãƒ†ã‚­ã‚¹ãƒˆ
 FText AWireNode::GetInteractText_Implementation() const
 {
-    //‚·‚Å‚ÉÚ‘±‚³‚ê‚Ä‚¢‚éê‡
-    if (bIsConnected)
-    {
-        return FText::FromString(TEXT("Connected"));
-    }
+	//ã™ã§ã«æ¥ç¶šã•ã‚Œã¦ã„ã‚‹å ´åˆ
+	if (bIsConnected)
+	{
+		return FText::FromString(TEXT("Connected"));
+	}
 
-    //ƒvƒŒƒCƒ„[‚ªƒƒCƒ„[‚ğ‚Á‚Ä‚¢‚éê‡
-    if (mCurrentPlayer && mCurrentPlayer->IsCarryingWire())
-    {
-        if (mNodeType == EWireNodeType::End)
-        {
-            AWireNode* StartNode = mCurrentPlayer->mCarryingWireStartNode;
-            if (StartNode && mWireColor == StartNode->mWireColor)
-            {
-                //F‚ªˆê’v‚µ‚Ä‚¢‚é
-                return FText::FromString(TEXT("Connect Wire"));
-            }
-            else
-            {
-                //F‚ªˆê’v‚µ‚Ä‚¢‚È‚¢
-                return FText::FromString(TEXT("Wrong Color"));
-            }
-        }
-    }
-    else
-    {
-        //ƒvƒŒƒCƒ„[‚ªƒƒCƒ„[‚ğ‚Á‚Ä‚¢‚È‚¢ê‡
-        if (mNodeType == EWireNodeType::Start && bHasWire)
-        {
-            return FText::FromString(TEXT("Pick Up Wire"));
-        }
-    }
+	//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æŒã£ã¦ã„ã‚‹å ´åˆ
+	if (mCurrentPlayer && mCurrentPlayer->IsCarryingWire())
+	{
+		if (mNodeType == EWireNodeType::End)
+		{
+			AWireNode* StartNode = mCurrentPlayer->mCarryingWireStartNode;
+			if (StartNode && mWireColor == StartNode->mWireColor)
+			{
+				//è‰²ãŒä¸€è‡´ã—ã¦ã„ã‚‹
+				return FText::FromString(TEXT("Connect Wire"));
+			}
+			else
+			{
+				//è‰²ãŒä¸€è‡´ã—ã¦ã„ãªã„
+				return FText::FromString(TEXT("Wrong Color"));
+			}
+		}
+	}
+	else
+	{
+		//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æŒã£ã¦ã„ãªã„å ´åˆ
+		if (mNodeType == EWireNodeType::Start && bHasWire)
+		{
+			return FText::FromString(TEXT("Pick Up Wire"));
+		}
+	}
 
-    return FText::FromString(TEXT(""));
+	return FText::FromString(TEXT(""));
 }
 
-/// @brief ƒvƒŒƒCƒ„[‚ªƒgƒŠƒK[”ÍˆÍ‚É“ü‚Á‚½‚ÉŒÄ‚Î‚ê‚é
-/// @param OverlappedComponent d‚È‚Á‚½ƒRƒ“ƒ|[ƒlƒ“ƒg
-/// @param OtherActor d‚È‚Á‚½‘Šè‚ÌƒAƒNƒ^
-/// @param OtherComp ‘Šè‚ÌƒRƒ“ƒ|[ƒlƒ“ƒg
-/// @param OtherBodyIndex ƒ{ƒfƒB‚ÌƒCƒ“ƒfƒbƒNƒX
-/// @param bFromSweep ƒXƒC[ƒv‚É‚æ‚éÕ“Ë‚©
-/// @param SweepResult Õ“Ë‚ÌÚ×î•ñ
+/// @brief ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒãƒˆãƒªã‚¬ãƒ¼ç¯„å›²ã«å…¥ã£ãŸæ™‚ã«å‘¼ã°ã‚Œã‚‹
+/// @param OverlappedComponent é‡ãªã£ãŸã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆ
+/// @param OtherActor é‡ãªã£ãŸç›¸æ‰‹ã®ã‚¢ã‚¯ã‚¿
+/// @param OtherComp ç›¸æ‰‹ã®ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆ
+/// @param OtherBodyIndex ãƒœãƒ‡ã‚£ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+/// @param bFromSweep ã‚¹ã‚¤ãƒ¼ãƒ—ã«ã‚ˆã‚‹è¡çªã‹
+/// @param SweepResult è¡çªã®è©³ç´°æƒ…å ±
 void AWireNode::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (ASotugyouSeisakuCharacter* Player = Cast<ASotugyouSeisakuCharacter>(OtherActor))
-    {
-        //ƒvƒŒƒCƒ„[‚ª”ÍˆÍ“à‚É“ü‚Á‚½
-        bPlayerInRange = true;
-        mCurrentPlayer = Player;
-    }
+	if (ASotugyouSeisakuCharacter* Player = Cast<ASotugyouSeisakuCharacter>(OtherActor))
+	{
+		//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒç¯„å›²å†…ã«å…¥ã£ãŸ
+		bPlayerInRange = true;
+		mCurrentPlayer = Player;
+	}
 }
 
-/// @brief ƒvƒŒƒCƒ„[‚ªƒgƒŠƒK[”ÍˆÍ‚©‚ço‚½‚ÉŒÄ‚Î‚ê‚é
-/// @param OverlappedComponent d‚È‚Á‚½ƒRƒ“ƒ|[ƒlƒ“ƒg
-/// @param OtherActor d‚È‚Á‚½‘Šè‚ÌƒAƒNƒ^
-/// @param OtherComp ‘Šè‚ÌƒRƒ“ƒ|[ƒlƒ“ƒg
-/// @param OtherBodyIndex ƒ{ƒfƒB‚ÌƒCƒ“ƒfƒbƒNƒX
+/// @brief ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒãƒˆãƒªã‚¬ãƒ¼ç¯„å›²ã‹ã‚‰å‡ºãŸæ™‚ã«å‘¼ã°ã‚Œã‚‹
+/// @param OverlappedComponent é‡ãªã£ãŸã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆ
+/// @param OtherActor é‡ãªã£ãŸç›¸æ‰‹ã®ã‚¢ã‚¯ã‚¿
+/// @param OtherComp ç›¸æ‰‹ã®ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆ
+/// @param OtherBodyIndex ãƒœãƒ‡ã‚£ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
 void AWireNode::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-    if (ASotugyouSeisakuCharacter* Player = Cast<ASotugyouSeisakuCharacter>(OtherActor))
-    {
-        //ƒvƒŒƒCƒ„[‚ª”ÍˆÍŠO‚Éo‚½
-        bPlayerInRange = false;
-        mCurrentPlayer = nullptr;
-    }
+	if (ASotugyouSeisakuCharacter* Player = Cast<ASotugyouSeisakuCharacter>(OtherActor))
+	{
+		//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒç¯„å›²å¤–ã«å‡ºãŸ
+		bPlayerInRange = false;
+		mCurrentPlayer = nullptr;
+	}
 }
 
-/// @brief ƒƒCƒ„[‚ğE‚¤iƒXƒ^[ƒgƒm[ƒh—pj
-/// @param Player ƒƒCƒ„[‚ğE‚¤ƒvƒŒƒCƒ„[
+/// @brief ãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æ‹¾ã†ï¼ˆã‚¹ã‚¿ãƒ¼ãƒˆãƒãƒ¼ãƒ‰ç”¨ï¼‰
+/// @param Player ãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æ‹¾ã†ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼
 void AWireNode::PickupWire(ASotugyouSeisakuCharacter* Player)
 {
-    if (!Player || !bHasWire || mNodeType != EWireNodeType::Start)
-    {
-        return;
-    }
+	if (!Player || !bHasWire || mNodeType != EWireNodeType::Start)
+	{
+		return;
+	}
 
-    //ƒpƒYƒ‹ƒ}ƒl[ƒWƒƒ[‚ğæ“¾
-    AWirePuzzleManager* Manager = AWirePuzzleManager::Get(GetWorld());
-    if (!Manager || !Manager->mWireConnectionClass)
-    {
-        return;
-    }
+	//ãƒ‘ã‚ºãƒ«ãƒãƒãƒ¼ã‚¸ãƒ£ãƒ¼ã‚’å–å¾—
+	AWirePuzzleManager* Manager = AWirePuzzleManager::Get(GetWorld());
+	if (!Manager || !Manager->mWireConnectionClass)
+	{
+		return;
+	}
 
-    //ƒƒCƒ„[‚Ì‹Šo•\Œ»‚ğ¶¬
-    AWireConnection* Connection = GetWorld()->SpawnActor<AWireConnection>(Manager->mWireConnectionClass);
-    if (Connection)
-    {
-        //ƒƒCƒ„[‚ğİ’èiƒXƒ^[ƒgƒm[ƒh‚©‚çƒvƒŒƒCƒ„[‚Ü‚Åj
-        Connection->SetupConnection(this, nullptr, Player);
-        Connection->AttachToPlayer(Player);
+	//ãƒ¯ã‚¤ãƒ¤ãƒ¼ã®è¦–è¦šè¡¨ç¾ã‚’ç”Ÿæˆ
+	AWireConnection* Connection = GetWorld()->SpawnActor<AWireConnection>(Manager->mWireConnectionClass);
+	if (Connection)
+	{
+		//ãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’è¨­å®šï¼ˆã‚¹ã‚¿ãƒ¼ãƒˆãƒãƒ¼ãƒ‰ã‹ã‚‰ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã¾ã§ï¼‰
+		Connection->SetupConnection(this, nullptr, Player);
+		Connection->AttachToPlayer(Player);
 
-        //ƒvƒŒƒCƒ„[‚ÉƒƒCƒ„[‚ğ‚½‚¹‚é
-        Player->SetCarryingWire(this, Connection);
+		//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã«ãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æŒãŸã›ã‚‹
+		Player->SetCarryingWire(this, Connection);
 
-        //‚±‚Ìƒm[ƒh‚Í‚à‚¤ƒƒCƒ„[‚ğ‚Á‚Ä‚¢‚È‚¢
-        bHasWire = false;
-    }
+		//ã“ã®ãƒãƒ¼ãƒ‰ã¯ã‚‚ã†ãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æŒã£ã¦ã„ãªã„
+		bHasWire = false;
+	}
 }
 
-/// @brief ƒƒCƒ„[‚ğÚ‘±‚·‚éiƒGƒ“ƒhƒm[ƒh—pj
-/// @param Player ƒƒCƒ„[‚ğÚ‘±‚·‚éƒvƒŒƒCƒ„[
+/// @brief ãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æ¥ç¶šã™ã‚‹ï¼ˆã‚¨ãƒ³ãƒ‰ãƒãƒ¼ãƒ‰ç”¨ï¼‰
+/// @param Player ãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’æ¥ç¶šã™ã‚‹ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼
 void AWireNode::ConnectWire(ASotugyouSeisakuCharacter* Player)
 {
-    if (!Player || mNodeType != EWireNodeType::End || bIsConnected)
-    {
-        return;
-    }
+	if (!Player || mNodeType != EWireNodeType::End || bIsConnected)
+	{
+		return;
+	}
 
-    //ƒvƒŒƒCƒ„[‚ª‚Á‚Ä‚¢‚éƒƒCƒ„[î•ñ‚ğæ“¾
-    AWireNode* StartNode = Player->mCarryingWireStartNode;
-    AWireConnection* Connection = Player->mCarryingWireConnection;
+	//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãŒæŒã£ã¦ã„ã‚‹ãƒ¯ã‚¤ãƒ¤ãƒ¼æƒ…å ±ã‚’å–å¾—
+	AWireNode* StartNode = Player->mCarryingWireStartNode;
+	AWireConnection* Connection = Player->mCarryingWireConnection;
 
-    if (!StartNode || !Connection)
-    {
-        return;
-    }
+	if (!StartNode || !Connection)
+	{
+		return;
+	}
 
-    //F‚ªˆê’v‚µ‚Ä‚¢‚é‚©ƒ`ƒFƒbƒN
-    if (mWireColor != StartNode->mWireColor)
-    {
-        return;
-    }
+	//æ¥ç¶šã‚’ç¢ºç«‹
+	bIsConnected = true;
+	mConnectedNode = StartNode;
+	StartNode->bIsConnected = true;
+	StartNode->mConnectedNode = this;
 
-    //Ú‘±‚ğŠm—§
-    bIsConnected = true;
-    mConnectedNode = StartNode;
-    StartNode->bIsConnected = true;
-    StartNode->mConnectedNode = this;
+	//ãƒ¯ã‚¤ãƒ¤ãƒ¼ã®çµ‚ç‚¹ã‚’è¨­å®šï¼ˆãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‹ã‚‰ã“ã®ãƒãƒ¼ãƒ‰ã«å›ºå®šï¼‰
+	Connection->SetupConnection(StartNode, this, nullptr);
 
-    //ƒƒCƒ„[‚ÌI“_‚ğİ’èiƒvƒŒƒCƒ„[‚©‚ç‚±‚Ìƒm[ƒh‚ÉŒÅ’èj
-    Connection->SetupConnection(StartNode, this, nullptr);
+	//ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‹ã‚‰ãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’ã‚¯ãƒªã‚¢
+	Player->ClearCarryingWire();
 
-    //ƒvƒŒƒCƒ„[‚©‚çƒƒCƒ„[‚ğƒNƒŠƒA
-    Player->ClearCarryingWire();
-
-    //ƒpƒYƒ‹ƒ}ƒl[ƒWƒƒ[‚ÉÚ‘±‚ğ’Ê’m
-    AWirePuzzleManager* Manager = AWirePuzzleManager::Get(GetWorld());
-    if (Manager)
-    {
-        Manager->RegisterConnection(StartNode, this, Player);
-    }
+	//ãƒ‘ã‚ºãƒ«ãƒãƒãƒ¼ã‚¸ãƒ£ãƒ¼ã«æ¥ç¶šã‚’é€šçŸ¥
+	AWirePuzzleManager* Manager = AWirePuzzleManager::Get(GetWorld());
+	if (Manager)
+	{
+		Manager->RegisterConnection(StartNode, this, Player);
+	}
 }
 
-/// @brief ƒƒCƒ„[‚ÌÚ‘±‚ğ‰ğœ‚·‚é
+/// @brief ãƒ¯ã‚¤ãƒ¤ãƒ¼ã®æ¥ç¶šã‚’è§£é™¤ã™ã‚‹
 void AWireNode::Disconnect()
 {
-    //Ú‘±æ‚Ìƒm[ƒh‚ÌÚ‘±‚à‰ğœ
-    if (mConnectedNode)
-    {
-        mConnectedNode->bIsConnected = false;
-        mConnectedNode->mConnectedNode = nullptr;
-    }
+	//æ¥ç¶šå…ˆã®ãƒãƒ¼ãƒ‰ã®æ¥ç¶šã‚‚è§£é™¤
+	if (mConnectedNode)
+	{
+		mConnectedNode->bIsConnected = false;
+		mConnectedNode->mConnectedNode = nullptr;
+	}
 
-    //‚±‚Ìƒm[ƒh‚ÌÚ‘±‚ğ‰ğœ
-    bIsConnected = false;
-    mConnectedNode = nullptr;
+	//ã“ã®ãƒãƒ¼ãƒ‰ã®æ¥ç¶šã‚’è§£é™¤
+	bIsConnected = false;
+	mConnectedNode = nullptr;
 
-    //ƒXƒ^[ƒgƒm[ƒh‚ÍƒƒCƒ„[‚ğÄ“x‚Â
-    if (mNodeType == EWireNodeType::Start)
-    {
-        bHasWire = true;
-    }
+	//ã‚¹ã‚¿ãƒ¼ãƒˆãƒãƒ¼ãƒ‰ã¯ãƒ¯ã‚¤ãƒ¤ãƒ¼ã‚’å†åº¦æŒã¤
+	if (mNodeType == EWireNodeType::Start)
+	{
+		bHasWire = true;
+	}
 }
 
-/// @brief w’è‚µ‚½ƒm[ƒh‚ÆÚ‘±‰Â”\‚©ƒ`ƒFƒbƒN
-/// @param TargetNode Ú‘±æ‚Ìƒm[ƒh
-/// @return Ú‘±‰Â”\‚È‚çtrue
+/// @brief æŒ‡å®šã—ãŸãƒãƒ¼ãƒ‰ã¨æ¥ç¶šå¯èƒ½ã‹ãƒã‚§ãƒƒã‚¯
+/// @param TargetNode æ¥ç¶šå…ˆã®ãƒãƒ¼ãƒ‰
+/// @return æ¥ç¶šå¯èƒ½ãªã‚‰true
 bool AWireNode::CanConnectTo(AWireNode* TargetNode) const
 {
-    if (!TargetNode)
-    {
-        return false;
-    }
+	if (!TargetNode)
+	{
+		return false;
+	}
 
-    //©•ª©g‚É‚ÍÚ‘±‚Å‚«‚È‚¢
-    if (TargetNode == this)
-    {
-        return false;
-    }
+	//è‡ªåˆ†è‡ªèº«ã«ã¯æ¥ç¶šã§ããªã„
+	if (TargetNode == this)
+	{
+		return false;
+	}
 
-    //‚·‚Å‚ÉÚ‘±‚³‚ê‚Ä‚¢‚é
-    if (bIsConnected || TargetNode->bIsConnected)
-    {
-        return false;
-    }
+	//ã™ã§ã«æ¥ç¶šã•ã‚Œã¦ã„ã‚‹
+	if (bIsConnected || TargetNode->bIsConnected)
+	{
+		return false;
+	}
 
-    //ƒXƒ^[ƒg“¯mAƒGƒ“ƒh“¯m‚ÍÚ‘±‚Å‚«‚È‚¢
-    if (mNodeType == TargetNode->mNodeType)
-    {
-        return false;
-    }
+	//ã‚¹ã‚¿ãƒ¼ãƒˆåŒå£«ã€ã‚¨ãƒ³ãƒ‰åŒå£«ã¯æ¥ç¶šã§ããªã„
+	if (mNodeType == TargetNode->mNodeType)
+	{
+		return false;
+	}
 
-    //F‚ªˆá‚¤
-    if (mWireColor != TargetNode->mWireColor)
-    {
-        return false;
-    }
+	//è‰²ãŒé•ã†
 
-    return true;
+	if (mWireColor != TargetNode->mWireColor)
+	{
+		return false;
+	}
+
+	return true;
 }
 
-/// @brief ƒƒCƒ„[‚ÌF‚ğæ“¾iFLinearColorŒ`®j
-/// @return ƒƒCƒ„[‚ÌF
+/// @brief ãƒ¯ã‚¤ãƒ¤ãƒ¼ã®è‰²ã‚’å–å¾—ï¼ˆFLinearColorå½¢å¼ï¼‰
+/// @return ãƒ¯ã‚¤ãƒ¤ãƒ¼ã®è‰²
 FLinearColor AWireNode::GetWireColorValue() const
 {
-    switch (mWireColor)
-    {
-    case EWireColor::Red:    return FLinearColor::Red;
-    case EWireColor::Blue:   return FLinearColor::Blue;
-    case EWireColor::Green:  return FLinearColor::Green;
-    case EWireColor::Yellow: return FLinearColor::Yellow;
-    case EWireColor::Purple: return FLinearColor(0.5f, 0.0f, 0.5f);
-    default: return FLinearColor::White;
-    }
+	switch (mWireColor)
+	{
+	case EWireColor::Red:    return FLinearColor::Red;
+	case EWireColor::Blue:   return FLinearColor::Blue;
+	case EWireColor::Green:  return FLinearColor::Green;
+	case EWireColor::Yellow: return FLinearColor::Yellow;
+	case EWireColor::Purple: return FLinearColor(0.5f, 0.0f, 0.5f);
+	default: return FLinearColor::White;
+	}
 }

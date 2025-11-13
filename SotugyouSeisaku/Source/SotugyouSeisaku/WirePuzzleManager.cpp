@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+ï»¿// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "WirePuzzleManager.h"
@@ -8,62 +8,63 @@
 
 // Sets default values
 
-/// @brief ƒRƒ“ƒXƒgƒ‰ƒNƒ^@Šeíİ’è
+/// @brief ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿ã€€ãƒ‘ã‚ºãƒ«ãƒãƒãƒ¼ã‚¸ãƒ£ãƒ¼ã®å„ç¨®è¨­å®š
 AWirePuzzleManager::AWirePuzzleManager()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	//æ¯ãƒ•ãƒ¬ãƒ¼ãƒ Tickã‚’å‘¼ã¶
 	PrimaryActorTick.bCanEverTick = true;
 
-	//ƒfƒtƒHƒ‹ƒg’l‚ğİ’è
+	//ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆå€¤ã‚’è¨­å®š
 	mTargetDoor = nullptr;
 	bResetOnWrongConnection = true;
 	bPuzzleCompleted = false;
 	bDoorOpen = false;
 
-	//ƒhƒA‚ÌˆÚ“®İ’è
+	//ãƒ‰ã‚¢ã®ç§»å‹•è¨­å®š
 	mDoorMoveOffset = FVector(0.0f, 0.0f, 300.0f);
 	mDoorMoveSpeed = 200.0f;
 }
 
-// Called when the game starts or when spawned
+/// @brief ã‚²ãƒ¼ãƒ é–‹å§‹æ™‚ã«å‘¼ã°ã‚Œã‚‹åˆæœŸåŒ–å‡¦ç†
 void AWirePuzzleManager::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	//ƒhƒA‚Ì‰ŠúˆÊ’u‚ğ•Û‘¶
+
+	//ãƒ‰ã‚¢ã®åˆæœŸä½ç½®ã‚’ä¿å­˜
 	if (mTargetDoor)
 	{
 		mDoorOriginalPosition = mTargetDoor->GetActorLocation();
 		mDoorTargetPosition = mDoorOriginalPosition + mDoorMoveOffset;
 	}
 
-	//ƒŒƒxƒ‹ã‚Ìƒm[ƒh‚ğ‰Šú‰»
+	//ãƒ¬ãƒ™ãƒ«ä¸Šã®ãƒãƒ¼ãƒ‰ã‚’åˆæœŸåŒ–
 	InitializeNodes();
 }
 
-// Called every frame
+/// @brief æ¯ãƒ•ãƒ¬ãƒ¼ãƒ å‘¼ã°ã‚Œã‚‹æ›´æ–°å‡¦ç†
+/// @param DeltaTime å‰ãƒ•ãƒ¬ãƒ¼ãƒ ã‹ã‚‰ã®çµŒéæ™‚é–“
 void AWirePuzzleManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//ƒhƒA‚ªŠJ‚­ó‘Ô‚È‚çƒhƒA‚ğ“®‚©‚·
+	//ãƒ‰ã‚¢ãŒé–‹ãçŠ¶æ…‹ãªã‚‰ãƒ‰ã‚¢ã‚’å‹•ã‹ã™
 	if (mTargetDoor && bDoorOpen)
 	{
 		MoveDoor(DeltaTime);
 	}
 }
 
-/// @brief ƒm[ƒh‚ğ‰Šú‰»
+/// @brief ãƒãƒ¼ãƒ‰ã‚’åˆæœŸåŒ–
 void AWirePuzzleManager::InitializeNodes()
 {
-	//ƒŒƒxƒ‹ã‚Ì‘SWireNode‚ğŒŸõ
+	//ãƒ¬ãƒ™ãƒ«ä¸Šã®å…¨WireNodeã‚’æ¤œç´¢
 	TArray<AActor*> FoundNodes;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AWireNode::StaticClass(), FoundNodes);
 }
 
-/// @brief ƒ[ƒ‹ƒh“à‚Ìƒ}ƒl[ƒWƒƒ[ƒCƒ“ƒXƒ^ƒ“ƒX‚ğæ“¾
-/// @param World ŒŸõ‚·‚éƒ[ƒ‹ƒh
-/// @return ƒ}ƒl[ƒWƒƒ[‚ÌƒCƒ“ƒXƒ^ƒ“ƒX
+/// @brief ãƒ¯ãƒ¼ãƒ«ãƒ‰å†…ã®ãƒãƒãƒ¼ã‚¸ãƒ£ãƒ¼ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’å–å¾—
+/// @param World æ¤œç´¢ã™ã‚‹ãƒ¯ãƒ¼ãƒ«ãƒ‰
+/// @return ãƒãƒãƒ¼ã‚¸ãƒ£ãƒ¼ã®ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹
 AWirePuzzleManager* AWirePuzzleManager::Get(UWorld* World)
 {
 	if (!World)
@@ -71,15 +72,15 @@ AWirePuzzleManager* AWirePuzzleManager::Get(UWorld* World)
 		return nullptr;
 	}
 
-	//ƒ[ƒ‹ƒh“à‚Ìƒ}ƒl[ƒWƒƒ[‚ğŒŸõ
+	//ãƒ¯ãƒ¼ãƒ«ãƒ‰å†…ã®ãƒãƒãƒ¼ã‚¸ãƒ£ãƒ¼ã‚’æ¤œç´¢
 	AActor* FoundActor = UGameplayStatics::GetActorOfClass(World, AWirePuzzleManager::StaticClass());
 	return Cast<AWirePuzzleManager>(FoundActor);
 }
 
-/// @brief ƒƒCƒ„[‚ÌÚ‘±‚ğ“o˜^
-/// @param StartNode ŠJnƒm[ƒh
-/// @param EndNode I—¹ƒm[ƒh
-/// @param Player Ú‘±‚µ‚½ƒvƒŒƒCƒ„[
+/// @brief ãƒ¯ã‚¤ãƒ¤ãƒ¼ã®æ¥ç¶šã‚’ç™»éŒ²
+/// @param StartNode é–‹å§‹ãƒãƒ¼ãƒ‰
+/// @param EndNode çµ‚äº†ãƒãƒ¼ãƒ‰
+/// @param Player æ¥ç¶šã—ãŸãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼
 void AWirePuzzleManager::RegisterConnection(AWireNode* StartNode, AWireNode* EndNode, ASotugyouSeisakuCharacter* Player)
 {
 	if (!StartNode || !EndNode)
@@ -87,17 +88,17 @@ void AWirePuzzleManager::RegisterConnection(AWireNode* StartNode, AWireNode* End
 		return;
 	}
 
-	//ƒpƒYƒ‹‚ÌŠ®—¹ó‘Ô‚ğƒ`ƒFƒbƒN
+	//ãƒ‘ã‚ºãƒ«ã®å®Œäº†çŠ¶æ…‹ã‚’ãƒã‚§ãƒƒã‚¯
 	CheckPuzzleCompletion();
 }
 
-/// @brief ƒpƒYƒ‹‚ÌŠ®—¹ó‘Ô‚ğƒ`ƒFƒbƒN
+/// @brief ãƒ‘ã‚ºãƒ«ã®å®Œäº†çŠ¶æ…‹ã‚’ãƒã‚§ãƒƒã‚¯
 void AWirePuzzleManager::CheckPuzzleCompletion()
 {
-	bool bAllConnected = true;  //‚·‚×‚ÄÚ‘±‚³‚ê‚Ä‚¢‚é‚©
-	bool bAllCorrect = true;    //‚·‚×‚Ä³‚µ‚­Ú‘±‚³‚ê‚Ä‚¢‚é‚©
+	bool bAllConnected = true;//ã™ã¹ã¦æ¥ç¶šã•ã‚Œã¦ã„ã‚‹ã‹
+	bool bAllCorrect = true;  //ã™ã¹ã¦æ­£ã—ãæ¥ç¶šã•ã‚Œã¦ã„ã‚‹ã‹
 
-	//“o˜^‚³‚ê‚½ƒyƒA‚ğƒ`ƒFƒbƒN
+	//ç™»éŒ²ã•ã‚ŒãŸãƒšã‚¢ã‚’ãƒã‚§ãƒƒã‚¯
 	for (FWirePair& Pair : mWirePairs)
 	{
 		if (!Pair.StartNode || !Pair.EndNode)
@@ -105,19 +106,19 @@ void AWirePuzzleManager::CheckPuzzleCompletion()
 			continue;
 		}
 
-		//Ú‘±‚³‚ê‚Ä‚¢‚é‚©ƒ`ƒFƒbƒN
+		//æ¥ç¶šã•ã‚Œã¦ã„ã‚‹ã‹ãƒã‚§ãƒƒã‚¯
 		if (!Pair.StartNode->bIsConnected || !Pair.EndNode->bIsConnected)
 		{
 			bAllConnected = false;
 			continue;
 		}
 
-		//³‚µ‚­Ú‘±‚³‚ê‚Ä‚¢‚é‚©ƒ`ƒFƒbƒNiƒXƒ^[ƒg‚ÆƒGƒ“ƒh‚ªŒİ‚¢‚ÉÚ‘±‚³‚ê‚Ä‚¢‚é‚©j
+		//æ­£ã—ãæ¥ç¶šã•ã‚Œã¦ã„ã‚‹ã‹ãƒã‚§ãƒƒã‚¯ï¼ˆã‚¹ã‚¿ãƒ¼ãƒˆã¨ã‚¨ãƒ³ãƒ‰ãŒäº’ã„ã«æ¥ç¶šã•ã‚Œã¦ã„ã‚‹ã‹ï¼‰
 		if (Pair.StartNode->mConnectedNode != Pair.EndNode)
 		{
 			bAllCorrect = false;
 
-			//ŠÔˆá‚Á‚½Ú‘±‚ÅƒŠƒZƒbƒg‚·‚éİ’è‚Ìê‡
+			//é–“é•ã£ãŸæ¥ç¶šã§ãƒªã‚»ãƒƒãƒˆã™ã‚‹è¨­å®šã®å ´åˆ
 			if (bResetOnWrongConnection)
 			{
 				OnPuzzleFailure();
@@ -125,25 +126,25 @@ void AWirePuzzleManager::CheckPuzzleCompletion()
 			}
 		}
 
-		//‚±‚ÌƒyƒA‚Í³‚µ‚­Ú‘±‚³‚ê‚Ä‚¢‚é
+		//ã“ã®ãƒšã‚¢ã¯æ­£ã—ãæ¥ç¶šã•ã‚Œã¦ã„ã‚‹
 		Pair.bIsConnected = true;
 	}
 
-	//‚·‚×‚Ä³‚µ‚­Ú‘±‚³‚ê‚Ä‚¢‚éê‡
+	//ã™ã¹ã¦æ­£ã—ãæ¥ç¶šã•ã‚Œã¦ã„ã‚‹å ´åˆ
 	if (bAllConnected && bAllCorrect)
 	{
 		OnPuzzleSuccess();
 	}
 }
 
-/// @brief ƒpƒYƒ‹‚ğƒŠƒZƒbƒg
+/// @brief ãƒ‘ã‚ºãƒ«ã‚’ãƒªã‚»ãƒƒãƒˆ
 void AWirePuzzleManager::ResetPuzzle()
 {
-	//ƒŒƒxƒ‹ã‚Ì‘Sƒm[ƒh‚ğæ“¾
+	//ãƒ¬ãƒ™ãƒ«ä¸Šã®å…¨ãƒãƒ¼ãƒ‰ã‚’å–å¾—
 	TArray<AActor*> FoundNodes;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AWireNode::StaticClass(), FoundNodes);
 
-	//‚·‚×‚Ä‚Ìƒm[ƒh‚ÌÚ‘±‚ğ‰ğœ
+	//ã™ã¹ã¦ã®ãƒãƒ¼ãƒ‰ã®æ¥ç¶šã‚’è§£é™¤
 	for (AActor* Actor : FoundNodes)
 	{
 		if (AWireNode* Node = Cast<AWireNode>(Actor))
@@ -152,7 +153,7 @@ void AWirePuzzleManager::ResetPuzzle()
 		}
 	}
 
-	//‚·‚×‚Ä‚ÌƒƒCƒ„[Ú‘±‚ğíœ
+	//ã™ã¹ã¦ã®ãƒ¯ã‚¤ãƒ¤ãƒ¼æ¥ç¶šã‚’å‰Šé™¤
 	for (AWireConnection* Connection : mActiveConnections)
 	{
 		if (Connection)
@@ -162,7 +163,7 @@ void AWirePuzzleManager::ResetPuzzle()
 	}
 	mActiveConnections.Empty();
 
-	//ƒyƒA‚ÌƒXƒe[ƒ^ƒX‚ğƒŠƒZƒbƒg
+	//ãƒšã‚¢ã®ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã‚’ãƒªã‚»ãƒƒãƒˆ
 	for (FWirePair& Pair : mWirePairs)
 	{
 		Pair.bIsConnected = false;
@@ -171,10 +172,10 @@ void AWirePuzzleManager::ResetPuzzle()
 	bPuzzleCompleted = false;
 }
 
-/// @brief ƒpƒYƒ‹¬Œ÷‚ÉŒÄ‚Î‚ê‚é
+/// @brief ãƒ‘ã‚ºãƒ«æˆåŠŸæ™‚ã«å‘¼ã°ã‚Œã‚‹
 void AWirePuzzleManager::OnPuzzleSuccess()
 {
-	//‚·‚Å‚ÉŠ®—¹‚µ‚Ä‚¢‚éê‡‚Í‰½‚à‚µ‚È‚¢
+	//ã™ã§ã«å®Œäº†ã—ã¦ã„ã‚‹å ´åˆã¯ä½•ã‚‚ã—ãªã„
 	if (bPuzzleCompleted)
 	{
 		return;
@@ -182,23 +183,21 @@ void AWirePuzzleManager::OnPuzzleSuccess()
 
 	bPuzzleCompleted = true;
 	bDoorOpen = true;
-
-	//TODO: ¬Œ÷‚ÌƒGƒtƒFƒNƒg‚âƒTƒEƒ“ƒh‚ğÄ¶
 }
 
-/// @brief ƒpƒYƒ‹¸”s‚ÉŒÄ‚Î‚ê‚é
+/// @brief ãƒ‘ã‚ºãƒ«å¤±æ•—æ™‚ã«å‘¼ã°ã‚Œã‚‹
 void AWirePuzzleManager::OnPuzzleFailure()
 {
-	//TODO: ¸”s‚ÌƒGƒtƒFƒNƒg‚âƒTƒEƒ“ƒh‚ğÄ¶
+	//TODO: å¤±æ•—æ™‚ã®ã‚¨ãƒ•ã‚§ã‚¯ãƒˆã‚„ã‚µã‚¦ãƒ³ãƒ‰ã‚’å†ç”Ÿ
 
-	//1•bŒã‚ÉƒŠƒZƒbƒg
+	//1ç§’å¾Œã«ãƒªã‚»ãƒƒãƒˆ
 	FTimerHandle ResetHandle;
 	GetWorld()->GetTimerManager().SetTimer(ResetHandle, this,
 		&AWirePuzzleManager::ResetPuzzle, 1.0f, false);
 }
 
-/// @brief ƒhƒA‚ğ“®‚©‚·
-/// @param DeltaTime ƒtƒŒ[ƒ€ŠÔ‚ÌŒo‰ßŠÔ
+/// @brief ãƒ‰ã‚¢ã‚’å‹•ã‹ã™
+/// @param DeltaTime ãƒ•ãƒ¬ãƒ¼ãƒ é–“ã®çµŒéæ™‚é–“
 void AWirePuzzleManager::MoveDoor(float DeltaTime)
 {
 	if (!mTargetDoor)
@@ -206,10 +205,10 @@ void AWirePuzzleManager::MoveDoor(float DeltaTime)
 		return;
 	}
 
-	//Œ»İˆÊ’u‚ğæ“¾
+	//ç¾åœ¨ä½ç½®ã‚’å–å¾—
 	FVector CurrentPosition = mTargetDoor->GetActorLocation();
 
-	//–Ú•WˆÊ’u‚ÉŒü‚©‚Á‚ÄŠŠ‚ç‚©‚ÉˆÚ“®
+	//ç›®æ¨™ä½ç½®ã«å‘ã‹ã£ã¦æ»‘ã‚‰ã‹ã«ç§»å‹•
 	FVector NewPosition = FMath::VInterpConstantTo(
 		CurrentPosition,
 		mDoorTargetPosition,
@@ -217,6 +216,6 @@ void AWirePuzzleManager::MoveDoor(float DeltaTime)
 		mDoorMoveSpeed
 	);
 
-	//V‚µ‚¢ˆÊ’u‚ğİ’è
+	//æ–°ã—ã„ä½ç½®ã‚’è¨­å®š
 	mTargetDoor->SetActorLocation(NewPosition);
 }

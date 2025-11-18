@@ -84,4 +84,7 @@ private:
 
 	//プレイヤーにアタッチされているか
 	bool bAttachedToPlayer;
+
+	//プレイイヤーの手の位置を取得
+	FVector GetPlayerHandLocation() const;
 };

@@ -120,21 +120,21 @@ void AWireConnection::UpdateWireVisuals()
 	}
 	else if (bAttachedToPlayer && mCarryingPlayer)
 	{
-		EndPos = mCarryingPlayer->GetActorLocation() + FVector(0, 0, 100.0f);
-
+		//プレイヤーの手の位置を取得
+		EndPos = GetPlayerHandLocation();
 	}
 	else
 	{
 		return;
 	}
 
-    // スプラインに自然なたわみを追加
+    //スプラインに自然なたわみを追加
 	float Distance = FVector::Distance(StartPos, EndPos);
 	float SagAmount = FMath::Clamp(Distance * 0.1f, 20.0f, 150.0f);//距離に応じたたわみ
 	FVector MidPos = (StartPos + EndPos) * 0.5f;
 	MidPos.Z -= SagAmount;//中央を下方向にたわませる
 
-	// 地面の高さを検出して貫通防止
+	//地面の高さを検出して貫通防止
 	FHitResult Hit;
 	FVector TraceStart = MidPos + FVector(0, 0, 2000.0f);//上から
 	FVector TraceEnd = MidPos - FVector(0, 0, 5000.0f);//下方向に
@@ -199,6 +199,27 @@ void AWireConnection::UpdateWireVisuals()
 		Segment->RegisterComponent();
 		mSplineMeshes.Add(Segment);
 	}
+}
+
+/// @brief プレイヤーの手の位置を取得
+/// @return 手の位置
+FVector AWireConnection::GetPlayerHandLocation() const
+{
+	if (!mCarryingPlayer)
+	{
+		return FVector::ZeroVector;
+	}
+
+	//スケルタルメッシュを取得
+	USkeletalMeshComponent* MeshComp = mCarryingPlayer->GetMesh();
+	if (MeshComp && MeshComp->DoesSocketExist(FName("RightHandSocket")))
+	{
+		//ソケットの位置を取得
+		return MeshComp->GetSocketLocation(FName("RightHandSocket"));
+	}
+
+	//ソケットがない場合はプレイヤーの頭上
+	return mCarryingPlayer->GetActorLocation() + FVector(50, 0, 100.0f);
 }
 
 /// @brief ワイヤーの色を設定

@@ -8,6 +8,7 @@
 #include "WireNode.generated.h"
 
 class UBoxComponent;
+class AWireConnection;
 
 //導線の色を定義する列挙型
 UENUM(BlueprintType)
@@ -83,6 +84,10 @@ public:
 	//このノードがワイヤーを持っているか（スタートノードのみ）
 	UPROPERTY(BlueprintReadOnly, Category = "Wire State")
 	bool bHasWire;
+
+	//接続されているワイヤーの視覚表現
+	UPROPERTY()
+	AWireConnection* mConnectedWire;
 
 	//ワイヤーを拾う（スタートノード用）
 	UFUNCTION(BlueprintCallable, Category = "Wire")

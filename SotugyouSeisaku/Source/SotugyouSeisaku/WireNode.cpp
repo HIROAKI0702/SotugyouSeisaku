@@ -123,28 +123,23 @@ bool AWireNode::CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerChar
 	//すでに接続されている場合
 	if (bIsConnected)
 	{
-		return false;
+		return true;
 	}
 
 	//プレイヤーがワイヤーを持っていない場合
 	if (!PlayerCharacter->IsCarryingWire())
 	{
 		//スタートノードで、ワイヤーがあるならインタラクト可能
-		return (mNodeType == EWireNodeType::Start && bHasWire);
+		bool CanPickup = (mNodeType == EWireNodeType::Start && bHasWire);
+		return CanPickup;
 	}
 	else
 	{
 		//プレイヤーがワイヤーを持っている場合
-		AWireNode* StartNode = PlayerCharacter->mCarryingWireStartNode;
-
-		//エンドノードで、色が一致するならインタラクト可能
-		if (mNodeType == EWireNodeType::End && StartNode)
-		{
-			return (mWireColor == StartNode->mWireColor);
-		}
+		//エンドノードで未接続ならどの色でも接続可能
+		bool CanConnect = (mNodeType == EWireNodeType::End && !bIsConnected);
+		return CanConnect;
 	}
-
-	return false;
 }
 
 /// @brief インタラクト時に表示するテキストを取得
@@ -274,8 +269,11 @@ void AWireNode::ConnectWire(ASotugyouSeisakuCharacter* Player)
 	//接続を確立
 	bIsConnected = true;
 	mConnectedNode = StartNode;
+	mConnectedWire = Connection;//接続の参照を保存
+
 	StartNode->bIsConnected = true;
 	StartNode->mConnectedNode = this;
+	StartNode->mConnectedWire = Connection;//スタートノードにも保存
 
 	//ワイヤーの終点を設定（プレイヤーからこのノードに固定）
 	Connection->SetupConnection(StartNode, this, nullptr);
@@ -294,21 +292,50 @@ void AWireNode::ConnectWire(ASotugyouSeisakuCharacter* Player)
 /// @brief ワイヤーの接続を解除する
 void AWireNode::Disconnect()
 {
-	//接続先のノードの接続も解除
-	if (mConnectedNode)
+
+	if (!bIsConnected || !mConnectedNode)
 	{
-		mConnectedNode->bIsConnected = false;
-		mConnectedNode->mConnectedNode = nullptr;
+		return;
 	}
 
-	//このノードの接続を解除
-	bIsConnected = false;
-	mConnectedNode = nullptr;
+	//接続されているワイヤーのビジュアルを削除
+	if (mConnectedWire)
+	{
+		mConnectedWire->Destroy();
+		mConnectedWire = nullptr;
+	}
 
-	//スタートノードはワイヤーを再度持つ
+	//接続先ノードの参照を取得
+	AWireNode* OtherNode = mConnectedNode;
+
+	//両方のノードの接続状態をクリア
+	this->bIsConnected = false;
+	this->mConnectedNode = nullptr;
+
+	if (OtherNode)
+	{
+		OtherNode->bIsConnected = false;
+		OtherNode->mConnectedNode = nullptr;
+		OtherNode->mConnectedWire = nullptr;
+
+		//スタートノードならワイヤーを再度持つ
+		if (OtherNode->mNodeType == EWireNodeType::Start)
+		{
+			OtherNode->bHasWire = true;
+		}
+	}
+
+	//このノードがスタートノードならワイヤーを再度持つ
 	if (mNodeType == EWireNodeType::Start)
 	{
 		bHasWire = true;
+	}
+
+	//パズルマネージャーに通知（再チェック用）
+	AWirePuzzleManager* Manager = AWirePuzzleManager::Get(GetWorld());
+	if (Manager)
+	{
+		Manager->CheckPuzzleCompletion();
 	}
 }
 

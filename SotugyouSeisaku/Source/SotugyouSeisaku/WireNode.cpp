@@ -30,7 +30,6 @@ AWireNode::AWireNode()
 	mInteractTrigger->SetGenerateOverlapEvents(true);
 
 	//デフォルト値を設定
-	mWireColor = EWireColor::Red;
 	mNodeType = EWireNodeType::Start;
 	mPairID = 0;
 	bIsConnected = false;
@@ -39,6 +38,11 @@ AWireNode::AWireNode()
 	mCurrentPlayer = nullptr;
 	bHasWire = true;//スタートノードは最初からワイヤーを持っている
 	mInteractDistance = 200.0f;
+
+	//拡張機能のデフォルト値
+	mMaxInputs = 2;   //Mergeノードは2入力
+	mMaxOutputs = 2;  //Splitノードは2出力
+	mMergedColor = EWireColor::Red;
 }
 
 /// @brief ゲーム開始時に呼ばれる初期化処理
@@ -146,36 +150,72 @@ bool AWireNode::CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerChar
 /// @return 表示するテキスト
 FText AWireNode::GetInteractText_Implementation() const
 {
-	//すでに接続されている場合
-	if (bIsConnected)
+	if (bIsConnected && mNodeType != EWireNodeType::Merge && mNodeType != EWireNodeType::Split)
 	{
-		return FText::FromString(TEXT("Connected"));
+		return FText::FromString(TEXT("Disconnect Wire"));
 	}
 
-	//プレイヤーがワイヤーを持っている場合
 	if (mCurrentPlayer && mCurrentPlayer->IsCarryingWire())
 	{
-		if (mNodeType == EWireNodeType::End)
+		//プレイヤーがワイヤーを持っている場合
+		switch (mNodeType)
 		{
-			AWireNode* StartNode = mCurrentPlayer->mCarryingWireStartNode;
-			if (StartNode && mWireColor == StartNode->mWireColor)
+		case EWireNodeType::End:
+		case EWireNodeType::Relay:
+			if (!bIsConnected) 
 			{
-				//色が一致している
 				return FText::FromString(TEXT("Connect Wire"));
+			}
+			else if (CanProvideOutput()) 
+			{
+				return FText::FromString(TEXT("Relay Wire"));
+			}
+			break;
+
+		case EWireNodeType::Merge:
+			if (CanAcceptInput())
+			{
+				return FText::FromString(FString::Printf(TEXT("Connect Wire (%d/%d)"),
+					mInputNodes.Num() + 1, mMaxInputs));
 			}
 			else
 			{
-				//色が一致していない
-				return FText::FromString(TEXT("Wrong Color"));
+				return FText::FromString(TEXT("Merge Full"));
 			}
+			break;
+
+		case EWireNodeType::Split:
+			if (CanAcceptInput()) 
+			{
+				return FText::FromString(TEXT("Connect Input Wire"));
+			}
+			else if (CanProvideOutput()) 
+			{
+				return FText::FromString(FString::Printf(TEXT("Split Wire (%d/%d)"), mOutputNodes.Num(), mMaxOutputs));
+			}
+			break;
 		}
 	}
 	else
 	{
 		//プレイヤーがワイヤーを持っていない場合
-		if (mNodeType == EWireNodeType::Start && bHasWire)
+		if (CanProvideOutput())
 		{
-			return FText::FromString(TEXT("Pick Up Wire"));
+			switch (mNodeType)
+			{
+			case EWireNodeType::Start:
+				return FText::FromString(TEXT("Pick Up Wire"));
+
+			case EWireNodeType::Relay:
+				return FText::FromString(TEXT("Relay Wire"));
+
+			case EWireNodeType::Merge:
+				return FText::FromString(TEXT("Pick Up Merged Wire"));
+
+			case EWireNodeType::Split:
+				return FText::FromString(FString::Printf(TEXT("Split Wire (%d/%d)"),
+					mOutputNodes.Num(), mMaxOutputs));
+			}
 		}
 	}
 
@@ -220,12 +260,17 @@ void AWireNode::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AA
 /// @param Player ワイヤーを拾うプレイヤー
 void AWireNode::PickupWire(ASotugyouSeisakuCharacter* Player)
 {
-	if (!Player || !bHasWire || mNodeType != EWireNodeType::Start)
+	if (!Player)
 	{
 		return;
 	}
 
-	//パズルマネージャーを取得
+	//出力可能かチェック
+	if (!CanProvideOutput())
+	{
+		return;
+	}
+
 	AWirePuzzleManager* Manager = AWirePuzzleManager::Get(GetWorld());
 	if (!Manager || !Manager->mWireConnectionClass)
 	{
@@ -236,15 +281,27 @@ void AWireNode::PickupWire(ASotugyouSeisakuCharacter* Player)
 	AWireConnection* Connection = GetWorld()->SpawnActor<AWireConnection>(Manager->mWireConnectionClass);
 	if (Connection)
 	{
-		//ワイヤーを設定（スタートノードからプレイヤーまで）
 		Connection->SetupConnection(this, nullptr, Player);
 		Connection->AttachToPlayer(Player);
 
-		//プレイヤーにワイヤーを持たせる
 		Player->SetCarryingWire(this, Connection);
 
-		//このノードはもうワイヤーを持っていない
-		bHasWire = false;
+		//ノードタイプに応じた処理
+		switch (mNodeType)
+		{
+		case EWireNodeType::Start:
+			bHasWire = false;
+			break;
+
+		case EWireNodeType::Relay:
+		case EWireNodeType::Merge:
+			//中継・合成ノードは入力があれば出力可能
+			break;
+
+		case EWireNodeType::Split:
+			//分岐ノードは複数出力可能
+			break;
+		}
 	}
 }
 
@@ -252,12 +309,11 @@ void AWireNode::PickupWire(ASotugyouSeisakuCharacter* Player)
 /// @param Player ワイヤーを接続するプレイヤー
 void AWireNode::ConnectWire(ASotugyouSeisakuCharacter* Player)
 {
-	if (!Player || mNodeType != EWireNodeType::End || bIsConnected)
+	if (!Player)
 	{
 		return;
 	}
 
-	//プレイヤーが持っているワイヤー情報を取得
 	AWireNode* StartNode = Player->mCarryingWireStartNode;
 	AWireConnection* Connection = Player->mCarryingWireConnection;
 
@@ -266,22 +322,83 @@ void AWireNode::ConnectWire(ASotugyouSeisakuCharacter* Player)
 		return;
 	}
 
-	//接続を確立
-	bIsConnected = true;
-	mConnectedNode = StartNode;
-	mConnectedWire = Connection;//接続の参照を保存
+	//ノードタイプに応じた接続処理
+	switch (mNodeType)
+	{
+	case EWireNodeType::End:
+	case EWireNodeType::Relay:
+		//通常の接続
+		if (!bIsConnected)
+		{
+			bIsConnected = true;
+			mConnectedNode = StartNode;
+			mConnectedWire = Connection;
 
-	StartNode->bIsConnected = true;
-	StartNode->mConnectedNode = this;
-	StartNode->mConnectedWire = Connection;//スタートノードにも保存
+			StartNode->bIsConnected = true;
+			StartNode->mConnectedNode = this;
+			StartNode->mConnectedWire = Connection;
+			StartNode->AddOutputNode(this);
 
-	//ワイヤーの終点を設定（プレイヤーからこのノードに固定）
-	Connection->SetupConnection(StartNode, this, nullptr);
+			AddInputNode(StartNode);
 
-	//プレイヤーからワイヤーをクリア
-	Player->ClearCarryingWire();
+			Connection->SetupConnection(StartNode, this, nullptr);
+			Player->ClearCarryingWire();
+		}
+		break;
 
-	//パズルマネージャーに接続を通知
+	case EWireNodeType::Merge:
+		//複数入力を受け付ける
+		if (CanAcceptInput())
+		{
+			AddInputNode(StartNode);
+			StartNode->AddOutputNode(this);
+
+			Connection->SetupConnection(StartNode, this, nullptr);
+			Player->ClearCarryingWire();
+
+			//全入力が揃ったら合成色を計算
+			if (mInputNodes.Num() >= mMaxInputs)
+			{
+				UpdateMergedColor();
+			}
+		}
+		break;
+
+	case EWireNodeType::Split:
+		//入力は1つだけ
+		if (mInputNodes.Num() == 0)
+		{
+			AddInputNode(StartNode);
+			StartNode->AddOutputNode(this);
+
+			Connection->SetupConnection(StartNode, this, nullptr);
+			Player->ClearCarryingWire();
+
+			//入力が来たら全出力にワイヤーをコピー
+			for (AWireNode* OutNode : mOutputNodes)
+			{
+				if (!OutNode->bIsConnected)
+				{
+					AWirePuzzleManager* Manager = AWirePuzzleManager::Get(GetWorld());
+					if (Manager && Manager->mWireConnectionClass)
+					{
+						AWireConnection* NewConn = GetWorld()->SpawnActor<AWireConnection>(Manager->mWireConnectionClass);
+						if (NewConn)
+						{
+							NewConn->SetupConnection(this, OutNode, nullptr);
+							mConnectedWire = NewConn;
+							OutNode->AddInputNode(this);
+							OutNode->bIsConnected = true;
+						}
+					}
+				}
+			}
+			bIsConnected = true;
+		}
+		break;
+	}
+
+	// パズルマネージャーに通知
 	AWirePuzzleManager* Manager = AWirePuzzleManager::Get(GetWorld());
 	if (Manager)
 	{
@@ -368,13 +485,154 @@ bool AWireNode::CanConnectTo(AWireNode* TargetNode) const
 	}
 
 	//色が違う
-
 	if (mWireColor != TargetNode->mWireColor)
 	{
 		return false;
 	}
 
 	return true;
+}
+
+/// @brief 2つの色を合成して新しい色を計算
+/// @param Color1 色1
+/// @param Color2 色2
+/// @return 合成された色
+EWireColor AWireNode::MergeColors(EWireColor Color1, EWireColor Color2)
+{
+	//赤 + 青 = 紫
+	if ((Color1 == EWireColor::Red && Color2 == EWireColor::Blue) ||
+		(Color1 == EWireColor::Blue && Color2 == EWireColor::Red))
+	{
+		return EWireColor::Purple;
+	}
+
+	//赤 + 緑 = 黄色
+	if ((Color1 == EWireColor::Red && Color2 == EWireColor::Green) ||
+		(Color1 == EWireColor::Green && Color2 == EWireColor::Red))
+	{
+		return EWireColor::Yellow;
+	}
+
+	//同じ色同士ならそのまま
+	if (Color1 == Color2)
+	{
+		return Color1;
+	}
+
+	//デフォルトは最初の色
+	return Color1;
+}
+
+/// @brief このノードが入力を受け付けられるか
+/// @return 入力可能ならtrue
+bool AWireNode::CanAcceptInput() const
+{
+	switch (mNodeType) 
+	{
+	case EWireNodeType::End:
+		return !bIsConnected;
+	case EWireNodeType::Relay:
+		return mInputNodes.Num() == 0;//Relayは1入力のみ許可
+	case EWireNodeType::Merge:
+		return mInputNodes.Num() < mMaxInputs;//最大入力数まで受付
+	case EWireNodeType::Split:
+		return mInputNodes.Num() == 0;//Splitは入力1本のみ
+	default:
+		return false;
+	}
+}
+
+/// @brief このノードが出力できるか
+/// @return 出力可能ならtrue
+bool AWireNode::CanProvideOutput() const
+{
+	switch (mNodeType)
+	{
+	case EWireNodeType::Start:
+		return bHasWire;
+
+	case EWireNodeType::Relay:
+		return mInputNodes.Num() > 0;//入力が1本以上あれば出力可能
+
+	case EWireNodeType::Merge:
+		return mInputNodes.Num() == mMaxInputs;//全入力が揃ったら出力可能
+
+	case EWireNodeType::Split:
+		return bIsConnected && mOutputNodes.Num() < mMaxOutputs;//入力があり、出力数未満
+
+	default:
+		return false;
+	}
+}
+
+/// @brief 入力ノードを追加
+/// @param InputNode 追加する入力ノード
+void AWireNode::AddInputNode(AWireNode* InputNode)
+{
+	if (!InputNode || mInputNodes.Contains(InputNode))
+	{
+		return;
+	}
+
+	mInputNodes.Add(InputNode);
+
+	switch (mNodeType) 
+	{
+	case EWireNodeType::Merge:
+		UpdateMergedColor();
+		if (mInputNodes.Num() >= mMaxInputs) 
+		{
+			bIsConnected = true;
+			bHasWire = true;//入力が揃ったら出力可能にする
+		}
+		break;
+	case EWireNodeType::Relay:
+	case EWireNodeType::End:
+		bIsConnected = true;
+		mConnectedNode = InputNode;
+		break;
+	case EWireNodeType::Split:
+		bIsConnected = true;//入力が1本あれば接続済み
+		break;
+	}
+}
+
+/// @brief 出力ノードを追加
+/// @param OutputNode 追加する出力ノード
+void AWireNode::AddOutputNode(AWireNode* OutputNode)
+{
+	if (!OutputNode || mOutputNodes.Contains(OutputNode))
+	{
+		return;
+	}
+
+	mOutputNodes.Add(OutputNode);
+}
+
+/// @brief 合成色を計算して更新
+void AWireNode::UpdateMergedColor()
+{
+	if (mNodeType != EWireNodeType::Merge || mInputNodes.Num() < 2)
+	{
+		return;
+	}
+
+	//最初の2つの入力ノードの色を合成
+	EWireColor Color1 = mInputNodes[0]->mWireColor;
+	EWireColor Color2 = mInputNodes[1]->mWireColor;
+
+	mMergedColor = MergeColors(Color1, Color2);
+	mWireColor = mMergedColor;//出力色を更新
+
+	//マテリアルを更新
+	if (mMesh && mMesh->GetMaterial(0))
+	{
+		UMaterialInstanceDynamic* DynMat = mMesh->CreateDynamicMaterialInstance(0);
+		if (DynMat)
+		{
+			DynMat->SetVectorParameterValue(FName("Color"), GetWireColorValue());
+		}
+	}
 }
 
 /// @brief ワイヤーの色を取得（FLinearColor形式）

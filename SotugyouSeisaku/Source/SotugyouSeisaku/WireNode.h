@@ -25,8 +25,11 @@ enum class EWireColor : uint8
 UENUM(BlueprintType)
 enum class EWireNodeType : uint8
 {
-	Start UMETA(DisplayName = "Start Point"),
-	End UMETA(DisplayName = "End Point")
+	Start UMETA(DisplayName = "Start Point"),//ワイヤーの始点
+	End UMETA(DisplayName = "End Point"),    //ワイヤーの終点
+	Relay UMETA(DisplayName = "Relay Point"),//中継ノード（色判定なし）
+	Merge UMETA(DisplayName = "Merge Point"),//合成ノード（2入力→1出力）
+	Split UMETA(DisplayName = "Split Point") //分岐ノード（1入力→複数出力）
 };
 
 UCLASS()
@@ -89,6 +92,26 @@ public:
 	UPROPERTY()
 	AWireConnection* mConnectedWire;
 
+	//入力ワイヤーのリスト（Merge/Relayノード用）
+	UPROPERTY(BlueprintReadOnly, Category = "Wire State")
+	TArray<AWireNode*> mInputNodes;
+
+	//出力ワイヤーのリスト（Splitノード用）
+	UPROPERTY(BlueprintReadOnly, Category = "Wire State")
+	TArray<AWireNode*> mOutputNodes;
+
+	//最大入力数（Mergeノード用）
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wire Settings")
+	int32 mMaxInputs;
+
+	//最大出力数（Splitノード用）
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wire Settings")
+	int32 mMaxOutputs;
+
+	//合成後の色（Mergeノード用、自動計算される）
+	UPROPERTY(BlueprintReadOnly, Category = "Wire State")
+	EWireColor mMergedColor;
+
 	//ワイヤーを拾う（スタートノード用）
 	UFUNCTION(BlueprintCallable, Category = "Wire")
 	void PickupWire(ASotugyouSeisakuCharacter* Player);
@@ -108,6 +131,30 @@ public:
 	//ワイヤーの色を取得（FLinearColor形式）
 	UFUNCTION(BlueprintCallable, Category = "Wire")
 	FLinearColor GetWireColorValue() const;
+
+	//2つの色を合成して新しい色を計算
+	UFUNCTION(BlueprintCallable, Category = "Wire")
+	EWireColor MergeColors(EWireColor Color1, EWireColor Color2);
+
+	//ノードの入力が受け付けられるかをチェックする
+	UFUNCTION(BlueprintCallable, Category = "Wire")
+	bool CanAcceptInput() const;
+
+	//このノードが出力できるかチェックする
+	UFUNCTION(BlueprintCallable, Category = "Wire")
+	bool CanProvideOutput() const;
+
+	//入力ノードを追加
+	UFUNCTION(BlueprintCallable, Category = "Wire")
+	void AddInputNode(AWireNode* InputNode);
+
+	//出力ノードを追加
+	UFUNCTION(BlueprintCallable, Category = "Wire")
+	void AddOutputNode(AWireNode* OutputNode);
+
+	//合成色を計算して更新
+	UFUNCTION(BlueprintCallable, Category = "Wire")
+	void UpdateMergedColor();
 
 	//オーバーラップイベント
 	UFUNCTION()

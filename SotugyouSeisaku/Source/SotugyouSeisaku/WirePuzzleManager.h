@@ -67,6 +67,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Puzzle Settings")
 	AActor* mTargetDoor;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door Parts", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* DoorFrame;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door Parts", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* DoorLower;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door Parts", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* DoorUpper;
+
 	//間違った接続をした時にリセットするか
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Puzzle Settings")
 	bool bResetOnWrongConnection;
@@ -121,6 +130,10 @@ private:
 	FVector mDoorOriginalPosition;
 	//ドアの目標位置
 	FVector mDoorTargetPosition;
+
+	FVector mLowerOriginalPos;
+	FVector mUpperOriginalPos;
+
 	//ドアが開いているか
 	bool bDoorOpen;
 

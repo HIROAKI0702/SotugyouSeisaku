@@ -87,6 +87,12 @@ void AWireNode::Interact_Implementation(ASotugyouSeisakuCharacter* PlayerCharact
 		return;
 	}
 
+	if (bCanDisconnect)
+	{
+		Disconnect();
+		return;
+	}
+
 	//プレイヤーがワイヤーを持っていない場合
 	if (!PlayerCharacter->IsCarryingWire())
 	{
@@ -120,6 +126,11 @@ bool AWireNode::CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerChar
 		return false;
 	}
 
+	if (bIsConnected || mInputNodes.Num() > 0 || mOutputNodes.Num() > 0)
+	{
+		return true;//接続がある場合は外せる
+	}
+
 	//距離チェック
 	float Distance = FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation());
 	if (Distance > mInteractDistance)
@@ -148,28 +159,23 @@ bool AWireNode::CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerChar
 			return false;
 		}
 
-		//Splitノード：最大出力数を超えたら追加できない
+		//Splitノード：入力があって、まだ最大出力数に達していない場合のみ
 		if (mNodeType == EWireNodeType::Split)
 		{
-			if (mOutputNodes.Num() >= mMaxOutputs)
-			{
-				return false;
-			}
-			return true;
+			return mInputNodes.Num() > 0 && mOutputNodes.Num() < mMaxOutputs;
 		}
 
-		bool CanConnect = mNodeType == EWireNodeType::End;
-		return CanConnect;
+		return false;
 	}
 	else
 	{
 		//プレイヤーがワイヤーを持っている場合
-		//エンドノードで未接続ならどの色でも接続可能
-		bool CanConnect = ((mNodeType == EWireNodeType::End || 
-			               mNodeType == EWireNodeType::Relay || 
-			               mNodeType == EWireNodeType::Merge ||
-					       mNodeType == EWireNodeType::Split) &&
-			               !bIsConnected);
+		//全ノードで、まだ入力が可能なら接続可能
+		bool CanConnect = ((mNodeType == EWireNodeType::End ||
+			mNodeType == EWireNodeType::Relay ||
+			mNodeType == EWireNodeType::Merge ||
+			mNodeType == EWireNodeType::Split) &&
+			CanAcceptInput());
 		return CanConnect;
 	}
 }
@@ -178,7 +184,7 @@ bool AWireNode::CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerChar
 /// @return 表示するテキスト
 FText AWireNode::GetInteractText_Implementation() const
 {
-	if (bIsConnected && mNodeType != EWireNodeType::Merge && mNodeType != EWireNodeType::Split)
+	if (bIsConnected)
 	{
 		return FText::FromString(TEXT("Disconnect Wire"));
 	}
@@ -265,6 +271,9 @@ void AWireNode::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, 
 		//プレイヤーが範囲内に入った
 		bPlayerInRange = true;
 		mCurrentPlayer = Player;
+
+		//接続済みなら外せる
+		bCanDisconnect = bIsConnected;
 	}
 }
 
@@ -280,6 +289,7 @@ void AWireNode::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AA
 	{
 		//プレイヤーが範囲外に出た
 		bPlayerInRange = false;
+		bCanDisconnect = false;
 		mCurrentPlayer = nullptr;
 	}
 }
@@ -314,8 +324,15 @@ void AWireNode::PickupWire(ASotugyouSeisakuCharacter* Player)
 
 		Player->SetCarryingWire(this, NewConnection);
 
-		//このノードのワイヤーフラグをクリア（スタートノード用）
-		if (mNodeType == EWireNodeType::Start || mNodeType == EWireNodeType::Relay || mNodeType == EWireNodeType::Merge)
+		//Splitノードから出力ワイヤーを取り出す場合
+		if (mNodeType == EWireNodeType::Split)
+		{
+			//出力ノードを追加してカウント
+			AWireNode* DummyNode = nullptr;  // Split用のダミーノード
+			mOutputNodes.Add(DummyNode);
+		}
+		//スタート/Relay/Mergeノードからワイヤーを拾う場合
+		else if (mNodeType == EWireNodeType::Start || mNodeType == EWireNodeType::Relay || mNodeType == EWireNodeType::Merge)
 		{
 			bHasWire = false;
 		}
@@ -465,47 +482,42 @@ void AWireNode::ConnectWire(ASotugyouSeisakuCharacter* Player)
 void AWireNode::Disconnect()
 {
 
-	if (!bIsConnected || !mConnectedNode)
+	if (!bIsConnected && mInputNodes.Num() == 0 && mOutputNodes.Num() == 0)
 	{
-		return;
+		return;//何も繋がってない
 	}
 
-	//接続されているワイヤーのビジュアルを削除
+	//接続中のワイヤーを削除
 	if (mConnectedWire)
 	{
 		mConnectedWire->Destroy();
 		mConnectedWire = nullptr;
 	}
 
-	//接続先ノードの参照を取得
+	//接続先のノードを取得
 	AWireNode* OtherNode = mConnectedNode;
 
-	//両方のノードの接続状態をクリア
-	this->bIsConnected = false;
-	this->mConnectedNode = nullptr;
+	//自ノード側のリセット
+	bIsConnected = false;
+	bHasWire = (mNodeType == EWireNodeType::Start);//Startは元々ワイヤー持つ
+	mConnectedNode = nullptr;
 
+	mInputNodes.Empty();
+	mOutputNodes.Empty();
+
+	//相手ノード側もリセット
 	if (OtherNode)
 	{
 		OtherNode->bIsConnected = false;
+		OtherNode->bHasWire = (OtherNode->mNodeType == EWireNodeType::Start);
 		OtherNode->mConnectedNode = nullptr;
-		OtherNode->mConnectedWire = nullptr;
 
-		//スタートノードならワイヤーを再度持つ
-		if (OtherNode->mNodeType == EWireNodeType::Start)
-		{
-			OtherNode->bHasWire = true;
-		}
+		OtherNode->mInputNodes.Remove(this);
+		OtherNode->mOutputNodes.Remove(this);
 	}
 
-	//このノードがスタートノードならワイヤーを再度持つ
-	if (mNodeType == EWireNodeType::Start)
-	{
-		bHasWire = true;
-	}
-
-	//パズルマネージャーに通知（再チェック用）
-	AWirePuzzleManager* Manager = AWirePuzzleManager::Get(GetWorld());
-	if (Manager)
+	//パズルマネージャーへ通知
+	if (AWirePuzzleManager* Manager = AWirePuzzleManager::Get(GetWorld()))
 	{
 		Manager->CheckPuzzleCompletion();
 	}

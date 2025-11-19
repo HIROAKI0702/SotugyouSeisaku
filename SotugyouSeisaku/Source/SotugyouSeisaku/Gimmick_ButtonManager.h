@@ -20,14 +20,23 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-private:
+public:
 	//管理するボタンのリスト（順番に押す必要がある）
 	UPROPERTY(EditAnywhere, Category = "Button Sequence")
 	TArray<AGimmick_Button*> mButtonSequence;
 
-	//制御するドア（開閉対象）
-	UPROPERTY(EditAnywhere, Category = "Button Sequence")
+	//パズル完了時に開くドア
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Button Sequence")
 	AActor* mTargetDoor;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door Parts", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* DoorFrame;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door Parts", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* DoorLower;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door Parts", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* DoorUpper;
 
 	//ドアの移動方向
 	UPROPERTY(EditAnywhere, Category = "Button Sequence")
@@ -69,6 +78,9 @@ private:
 
 	//ドアの目標位置
 	FVector mDoorTargetPosition;
+
+	FVector mLowerOriginalPos;
+	FVector mUpperOriginalPos;
 
 public:
 	//ボタンが押されたときに呼ばれる

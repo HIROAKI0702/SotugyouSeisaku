@@ -48,9 +48,18 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	//制御するドア
-	UPROPERTY(EditAnywhere, Category = "Balance Settings")
+	//パズル完了時に開くドア
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Puzzle Settings")
 	AActor* mTargetDoor;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door Parts", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* DoorFrame;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door Parts", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* DoorLower;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Door Parts", meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* DoorUpper;
 
 	//ドアの移動方向
 	UPROPERTY(EditAnywhere, Category = "Balance Settings")
@@ -105,6 +114,9 @@ public:
 
 	//ドアの目標位置
 	FVector mDoorTargetPosition;
+
+	FVector mLowerOriginalPos;
+	FVector mUpperOriginalPos;
 
 	//現在の梁の傾き角度
 	float mCurrentTiltAngle = 0.0f;

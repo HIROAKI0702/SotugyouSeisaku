@@ -81,8 +81,15 @@ void AGimmick_Balance::BeginPlay()
 	//ドアの初期位置を保存
 	if (mTargetDoor)
 	{
-		mDoorOriginalPosition = mTargetDoor->GetActorLocation();
-		mDoorTargetPosition = mDoorOriginalPosition + mDoorMoveOffset;
+		//Blueprint の StaticMesh1 / StaticMesh2 を名前で取得
+		UStaticMeshComponent* DoorParts1 =
+			Cast<UStaticMeshComponent>(mTargetDoor->GetDefaultSubobjectByName(TEXT("StaticMesh1")));
+
+		UStaticMeshComponent* DoorParts2 =
+			Cast<UStaticMeshComponent>(mTargetDoor->GetDefaultSubobjectByName(TEXT("StaticMesh2")));
+
+		if (DoorParts1) mLowerOriginalPos = DoorParts1->GetRelativeLocation();
+		if (DoorParts2) mUpperOriginalPos = DoorParts2->GetRelativeLocation();
 	}
 
 	//オーバーラップイベントをバインド
@@ -295,26 +302,39 @@ void AGimmick_Balance::CheckBalance()
 /// @param DeltaTime フレーム間の経過時間
 void AGimmick_Balance::MoveDoor(float DeltaTime)
 {
-	FVector CurrentPosition = mTargetDoor->GetActorLocation();
-	FVector TargetPosition;
+	if (!mTargetDoor) return;
 
-	//ドアの状態に応じて目標位置を決定
-	if (bDoorOpen)
-	{
-		TargetPosition = mDoorTargetPosition;//開く
-	}
-	else
-	{
-		TargetPosition = mDoorOriginalPosition;//閉じる
-	}
+	//Blueprint内のStaticMesh1（下）とStaticMesh2（上）を取得
+	UStaticMeshComponent* DoorParts1 =
+		Cast<UStaticMeshComponent>(mTargetDoor->GetDefaultSubobjectByName(TEXT("StaticMesh1")));
 
-	//滑らかに移動
-	FVector NewPosition = FMath::VInterpConstantTo(
-		CurrentPosition,
-		TargetPosition,
-		DeltaTime,
-		mDoorMoveSpeed
+	UStaticMeshComponent* DoorParts2 =
+		Cast<UStaticMeshComponent>(mTargetDoor->GetDefaultSubobjectByName(TEXT("StaticMesh2")));
+
+	if (!DoorParts1 || !DoorParts2) return;
+
+	//目標オフセット
+	float SlideAmount = 220.f;//上下の移動量
+
+	FVector LowerClosedPos = mLowerOriginalPos;
+	FVector UpperClosedPos = mUpperOriginalPos;
+
+	FVector LowerOpenPos = LowerClosedPos - FVector(0, 0, SlideAmount);//下へスライド
+	FVector UpperOpenPos = UpperClosedPos + FVector(0, 0, SlideAmount);//上へスライド
+
+	FVector LowerTarget = bDoorOpen ? LowerOpenPos : LowerClosedPos;
+	FVector UpperTarget = bDoorOpen ? UpperOpenPos : UpperClosedPos;
+
+	//補間移動
+	FVector NewLowerPos = FMath::VInterpConstantTo(
+		DoorParts1->GetRelativeLocation(), LowerTarget, DeltaTime, mDoorMoveSpeed
 	);
 
-	mTargetDoor->SetActorLocation(NewPosition);
+	FVector NewUpperPos = FMath::VInterpConstantTo(
+		DoorParts2->GetRelativeLocation(), UpperTarget, DeltaTime, mDoorMoveSpeed
+	);
+
+	//パーツの位置を更新
+	DoorParts1->SetRelativeLocation(NewLowerPos);
+	DoorParts2->SetRelativeLocation(NewUpperPos);
 }

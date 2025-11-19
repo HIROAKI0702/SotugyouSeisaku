@@ -112,6 +112,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Wire State")
 	EWireColor mMergedColor;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool bCanDisconnect = false;
+
 	//ワイヤーを拾う（スタートノード用）
 	UFUNCTION(BlueprintCallable, Category = "Wire")
 	void PickupWire(ASotugyouSeisakuCharacter* Player);

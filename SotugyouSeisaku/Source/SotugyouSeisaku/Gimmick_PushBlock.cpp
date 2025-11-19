@@ -53,12 +53,10 @@ void AGimmick_PushBlock::Interact_Implementation(ASotugyouSeisakuCharacter* Play
 		if (!bIsBeginePushed)
 		{
 			StartPushing(PlayerCharacter);
-			UE_LOG(LogTemp, Log, TEXT("Started pushing block"));
 		}
 		else
 		{
 			StopPushing();
-			UE_LOG(LogTemp, Log, TEXT("Stopped pushing block"));
 		}
 	}
 }
@@ -73,14 +71,14 @@ bool AGimmick_PushBlock::CanInteract_Implementation(ASotugyouSeisakuCharacter* P
 		return false;
 	}
 
-	// 距離チェック
+	//距離チェック
 	float Distance = FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation());
 	if (Distance > mInteractDistance)
 	{
 		return false;
 	}
 
-	// 押せる位置にいるかチェック
+	//押せる位置にいるかチェック
 	return CanBePushedByPlayer(PlayerCharacter->GetActorLocation());
 }
 

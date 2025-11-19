@@ -124,7 +124,17 @@ private:
 	//ドアが開いているか
 	bool bDoorOpen;
 
+	//経路がつながっているか確認（DFS）
+	bool IsPathConnected(AWireNode* StartNode, AWireNode* EndNode);
+
+	//深さ優先探索で経路を探索
+	bool TracePathDFS(AWireNode* CurrentNode, AWireNode* TargetNode, TSet<AWireNode*>& Visited);
+
 	//現在アクティブなワイヤー接続のリスト
 	UPROPERTY()
 	TArray<class AWireConnection*> mActiveConnections;
+
+	//レベル上の全ノードをキャッシュする
+	UPROPERTY()
+	TArray<AWireNode*> mAllNodes;
 };

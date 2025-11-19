@@ -85,7 +85,7 @@ public:
 	AWireNode* mConnectedNode;
 
 	//このノードがワイヤーを持っているか（スタートノードのみ）
-	UPROPERTY(BlueprintReadOnly, Category = "Wire State")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wire State")
 	bool bHasWire;
 
 	//接続されているワイヤーの視覚表現

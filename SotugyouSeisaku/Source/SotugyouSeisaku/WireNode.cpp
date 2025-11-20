@@ -103,8 +103,7 @@ void AWireNode::Interact_Implementation(ASotugyouSeisakuCharacter* PlayerCharact
 		}
 		//Relay/Merge/Splitノードから出力ワイヤーを拾う
 		else if (CanProvideOutput() && (mNodeType == EWireNodeType::Relay ||
-			mNodeType == EWireNodeType::Merge ||
-			mNodeType == EWireNodeType::Split))
+			mNodeType == EWireNodeType::Merge))
 		{
 			PickupWire(PlayerCharacter);
 		}
@@ -159,12 +158,6 @@ bool AWireNode::CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerChar
 			return false;
 		}
 
-		//Splitノード：入力があって、まだ最大出力数に達していない場合のみ
-		if (mNodeType == EWireNodeType::Split)
-		{
-			return mInputNodes.Num() > 0 && mOutputNodes.Num() < mMaxOutputs;
-		}
-
 		return false;
 	}
 	else
@@ -173,8 +166,7 @@ bool AWireNode::CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerChar
 		//全ノードで、まだ入力が可能なら接続可能
 		bool CanConnect = ((mNodeType == EWireNodeType::End ||
 			mNodeType == EWireNodeType::Relay ||
-			mNodeType == EWireNodeType::Merge ||
-			mNodeType == EWireNodeType::Split) &&
+			mNodeType == EWireNodeType::Merge) &&
 			CanAcceptInput());
 		return CanConnect;
 	}
@@ -217,17 +209,6 @@ FText AWireNode::GetInteractText_Implementation() const
 				return FText::FromString(TEXT("Merge Full"));
 			}
 			break;
-
-		case EWireNodeType::Split:
-			if (CanAcceptInput()) 
-			{
-				return FText::FromString(TEXT("Connect Input Wire"));
-			}
-			else if (CanProvideOutput()) 
-			{
-				return FText::FromString(FString::Printf(TEXT("Split Wire (%d/%d)"), mOutputNodes.Num(), mMaxOutputs));
-			}
-			break;
 		}
 	}
 	else
@@ -245,10 +226,6 @@ FText AWireNode::GetInteractText_Implementation() const
 
 			case EWireNodeType::Merge:
 				return FText::FromString(TEXT("Pick Up Merged Wire"));
-
-			case EWireNodeType::Split:
-				return FText::FromString(FString::Printf(TEXT("Split Wire (%d/%d)"),
-					mOutputNodes.Num(), mMaxOutputs));
 			}
 		}
 	}
@@ -324,15 +301,8 @@ void AWireNode::PickupWire(ASotugyouSeisakuCharacter* Player)
 
 		Player->SetCarryingWire(this, NewConnection);
 
-		//Splitノードから出力ワイヤーを取り出す場合
-		if (mNodeType == EWireNodeType::Split)
-		{
-			//出力ノードを追加してカウント
-			AWireNode* DummyNode = nullptr;  // Split用のダミーノード
-			mOutputNodes.Add(DummyNode);
-		}
 		//スタート/Relay/Mergeノードからワイヤーを拾う場合
-		else if (mNodeType == EWireNodeType::Start || mNodeType == EWireNodeType::Relay || mNodeType == EWireNodeType::Merge)
+		if (mNodeType == EWireNodeType::Start || mNodeType == EWireNodeType::Relay || mNodeType == EWireNodeType::Merge)
 		{
 			bHasWire = false;
 		}
@@ -444,35 +414,6 @@ void AWireNode::ConnectWire(ASotugyouSeisakuCharacter* Player)
 		}
 	}
 	break;
-
-	case EWireNodeType::Split:
-	{
-		//Splitノードは1本の入力ワイヤーを受け付ける
-		if (CanAcceptInput())
-		{
-			bIsConnected = true;
-			mConnectedNode = StartNode;
-			mConnectedWire = Connection;
-
-			AddInputNode(StartNode);
-			StartNode->AddOutputNode(this);
-
-			Connection->SetupConnection(StartNode, this, nullptr);
-			Player->ClearCarryingWire();
-
-			//Split は出力可能にしてワイヤーを持つ
-			bHasWire = true;
-
-			// パズルマネージャーに通知
-			AWirePuzzleManager* Manager = AWirePuzzleManager::Get(GetWorld());
-			if (Manager)
-			{
-				Manager->RegisterConnection(StartNode, this, Player);
-			}
-		}
-	}
-	break;
-
 	default:
 		break;
 	}
@@ -602,8 +543,6 @@ bool AWireNode::CanAcceptInput() const
 		return mInputNodes.Num() == 0;//Relayは1入力のみ許可
 	case EWireNodeType::Merge:
 		return mInputNodes.Num() < mMaxInputs;//最大入力数まで受付
-	case EWireNodeType::Split:
-		return mInputNodes.Num() == 0;//Splitは入力1本のみ
 	default:
 		return false;
 	}
@@ -625,11 +564,6 @@ bool AWireNode::CanProvideOutput() const
 	case EWireNodeType::Merge:
 		//全入力が揃ったら出力可能
 		return mInputNodes.Num() == mMaxInputs && bHasWire;
-
-	case EWireNodeType::Split:
-		//Split は入力があれば出力可能
-		return mInputNodes.Num() > 0 && bHasWire;
-
 	default:
 		return false;
 	}
@@ -683,24 +617,6 @@ void AWireNode::AddInputNode(AWireNode* InputNode)
 	case EWireNodeType::End:
 		bIsConnected = true;
 		mConnectedNode = InputNode;
-		break;
-
-	case EWireNodeType::Split:
-		bIsConnected = true;
-		mConnectedNode = InputNode;
-		bHasWire = true;//入力を受けたら出力可能に
-		mWireColor = InputNode->mWireColor;
-
-		// マテリアルを更新
-		if (mMesh && mMesh->GetMaterial(0))
-		{
-			UMaterialInstanceDynamic* DynMat = mMesh->CreateDynamicMaterialInstance(0);
-			if (DynMat)
-			{
-				DynMat->SetVectorParameterValue(FName("Color"), GetWireColorValue());
-			}
-		}
-
 		break;
 	}
 }

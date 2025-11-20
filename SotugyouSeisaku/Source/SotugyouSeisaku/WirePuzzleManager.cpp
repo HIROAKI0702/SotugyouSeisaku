@@ -157,13 +157,6 @@ void AWirePuzzleManager::RegisterConnection(AWireNode* StartNode, AWireNode* End
 		}
 	}
 
-	//Split ノードは出力ノードへ自動的にワイヤーを張る処理（ノード側で実装済みなら）
-	if (EndNode->mNodeType == EWireNodeType::Split)
-	{
-		// もしノード側に UpdateSplitOutputs 等の関数があれば呼ぶ（任意）
-		// EndNode->UpdateSplitOutputs();
-	}
-
 	//パズル状態をチェック
 	CheckPuzzleCompletion();
 }

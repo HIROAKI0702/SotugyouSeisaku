@@ -29,7 +29,6 @@ enum class EWireNodeType : uint8
 	End UMETA(DisplayName = "End Point"),    //ワイヤーの終点
 	Relay UMETA(DisplayName = "Relay Point"),//中継ノード（色判定なし）
 	Merge UMETA(DisplayName = "Merge Point"),//合成ノード（2入力→1出力）
-	Split UMETA(DisplayName = "Split Point") //分岐ノード（1入力→複数出力）
 };
 
 UCLASS()

@@ -87,12 +87,6 @@ void AWireNode::Interact_Implementation(ASotugyouSeisakuCharacter* PlayerCharact
 		return;
 	}
 
-	if (bCanDisconnect)
-	{
-		Disconnect();
-		return;
-	}
-
 	//プレイヤーがワイヤーを持っていない場合
 	if (!PlayerCharacter->IsCarryingWire())
 	{
@@ -125,22 +119,11 @@ bool AWireNode::CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerChar
 		return false;
 	}
 
-	if (bIsConnected || mInputNodes.Num() > 0 || mOutputNodes.Num() > 0)
-	{
-		return true;//接続がある場合は外せる
-	}
-
 	//距離チェック
 	float Distance = FVector::Dist(GetActorLocation(), PlayerCharacter->GetActorLocation());
 	if (Distance > mInteractDistance)
 	{
 		return false;
-	}
-
-	//すでに接続されている場合
-	if (bIsConnected)
-	{
-		return true;
 	}
 
 	//プレイヤーがワイヤーを持っていない場合
@@ -149,13 +132,19 @@ bool AWireNode::CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerChar
 		//スタートノード：ワイヤーをまだ持っている場合のみ
 		if (mNodeType == EWireNodeType::Start)
 		{
-			return bHasWire;
+			return bHasWire && !bIsConnected;
 		}
 
-		//Relayノードはワイヤーを取り出せない
+		//Relayノード：出力可能な場合のみ
 		if (mNodeType == EWireNodeType::Relay)
 		{
-			return false;
+			return CanProvideOutput();
+		}
+
+		//Mergeノード：出力可能な場合のみ
+		if (mNodeType == EWireNodeType::Merge)
+		{
+			return CanProvideOutput();
 		}
 
 		return false;
@@ -176,11 +165,6 @@ bool AWireNode::CanInteract_Implementation(ASotugyouSeisakuCharacter* PlayerChar
 /// @return 表示するテキスト
 FText AWireNode::GetInteractText_Implementation() const
 {
-	if (bIsConnected)
-	{
-		return FText::FromString(TEXT("Disconnect Wire"));
-	}
-
 	if (mCurrentPlayer && mCurrentPlayer->IsCarryingWire())
 	{
 		//プレイヤーがワイヤーを持っている場合
@@ -188,13 +172,9 @@ FText AWireNode::GetInteractText_Implementation() const
 		{
 		case EWireNodeType::End:
 		case EWireNodeType::Relay:
-			if (!bIsConnected) 
+			if (!bIsConnected)
 			{
 				return FText::FromString(TEXT("Connect Wire"));
-			}
-			else if (CanProvideOutput()) 
-			{
-				return FText::FromString(TEXT("Relay Wire"));
 			}
 			break;
 
@@ -222,7 +202,7 @@ FText AWireNode::GetInteractText_Implementation() const
 				return FText::FromString(TEXT("Pick Up Wire"));
 
 			case EWireNodeType::Relay:
-				return FText::FromString(TEXT("Relay Wire"));
+				return FText::FromString(TEXT("Pick Up Relayed Wire"));
 
 			case EWireNodeType::Merge:
 				return FText::FromString(TEXT("Pick Up Merged Wire"));
@@ -248,9 +228,6 @@ void AWireNode::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, 
 		//プレイヤーが範囲内に入った
 		bPlayerInRange = true;
 		mCurrentPlayer = Player;
-
-		//接続済みなら外せる
-		bCanDisconnect = bIsConnected;
 	}
 }
 
@@ -266,7 +243,6 @@ void AWireNode::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AA
 	{
 		//プレイヤーが範囲外に出た
 		bPlayerInRange = false;
-		bCanDisconnect = false;
 		mCurrentPlayer = nullptr;
 	}
 }

@@ -111,8 +111,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Wire State")
 	EWireColor mMergedColor;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	bool bCanDisconnect = false;
+	//ワイヤーの最大長（cm）
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Wire Puzzle")
+	float mMaxWireLength = 0.0f;
 
 	//ワイヤーを拾う（スタートノード用）
 	UFUNCTION(BlueprintCallable, Category = "Wire")

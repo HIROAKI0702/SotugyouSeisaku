@@ -5,6 +5,7 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Blueprint/UserWidget.h"
 #include "GameFramework/PlayerController.h"
+#include "Kismet/GameplayStatics.h"
 
 /// @brief コンストラクタ　デフォルトのポーンクラスを設定
 ASotugyouSeisakuGameMode::ASotugyouSeisakuGameMode()
@@ -46,5 +47,19 @@ void ASotugyouSeisakuGameMode::BeginPlay()
                 PC->bEnableMouseOverEvents = true;
             }
         }
+    }
+
+    if (BackgroundMusic)
+    {
+        BGMComponent = UGameplayStatics::SpawnSound2D(
+            this,
+            BackgroundMusic,
+            1.0f,    
+            1.0f,    
+            0.0f,    
+            nullptr,
+            true,    
+            false    
+        );
     }
 }

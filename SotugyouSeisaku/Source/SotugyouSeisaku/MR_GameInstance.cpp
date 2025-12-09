@@ -20,7 +20,6 @@ void UMR_GameInstance::UnlockStage(int32 StageIndex)
 	{
 		//指定ステージのアンロックフラグを有効化
 		mStages[StageIndex].bIsUnlocked = true;
-		UE_LOG(LogTemp, Log, TEXT("Stage %d unlocked: %s"), StageIndex, *mStages[StageIndex].mStageName);
 	}
 }
 
@@ -38,8 +37,6 @@ void UMR_GameInstance::SetStageCleared(int32 StageIndex)
 		{
 			UnlockStage(StageIndex + 1);
 		}
-
-		UE_LOG(LogTemp, Log, TEXT("Stage %d cleared: %s"), StageIndex, *mStages[StageIndex].mStageName);
 	}
 }
 
@@ -54,27 +51,19 @@ void UMR_GameInstance::LoadStage(int32 StageIndex)
 		//対応するレベル名を取得
 		FName LevelName = mStages[StageIndex].mLevelName;
 
-		UE_LOG(LogTemp, Warning, TEXT("Loading stage%s"), *LevelName.ToString());
-
 		//レベルを開く
 		UGameplayStatics::OpenLevel(this, LevelName);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Error, TEXT("Invalid stage index: %d"), StageIndex);
 	}
 }
 
 /// @brief タイトル画面に戻る関数
 void UMR_GameInstance::ReturnToTitle()
 {
-	UE_LOG(LogTemp, Log, TEXT("Returning to title screen"));
 	UGameplayStatics::OpenLevel(this, FName("TitleScreen"));
 }
 
 /// @brief ステージ選択画面に戻る
 void UMR_GameInstance::ReturnToStageSelect()
 {
-	UE_LOG(LogTemp, Log, TEXT("Returning to stage select"));
 	UGameplayStatics::OpenLevel(this, FName("StageSelectScreen"));
 }

@@ -16,6 +16,9 @@ class ASotugyouSeisakuGameMode : public AGameModeBase
 public:
 	ASotugyouSeisakuGameMode();
 
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+    USoundBase* BackgroundMusic;
+
 protected:
     virtual void BeginPlay() override;
 
@@ -27,6 +30,9 @@ private:
     //作成されたウィジェットの参照
     UPROPERTY()
     UUserWidget* TutorialWidgetInstance;
+
+    UPROPERTY()
+    UAudioComponent* BGMComponent;
 };
 
 

@@ -8,6 +8,9 @@
 #include "Gimmick_PushBlock.h"
 #include "DrawDebugHelpers.h"
 #include "SotugyouSeisakuCharacter.h"
+#include "Sound/SoundBase.h"
+#include "Components/AudioComponent.h"
+#include <Kismet/GameplayStatics.h>
 
 // Sets default values
 
@@ -71,6 +74,16 @@ AGimmick_Balance::AGimmick_Balance()
 	mDoorMoveOffset = FVector(0.0f, 0.0f, 300.0f);
 	mDoorMoveSpeed = 200.0f;
 	mBalanceTolerance = 50.0f;
+
+	//AudioComponentを作成
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->SetupAttachment(RootComponent);
+	AudioComponent->bAutoActivate = false;//自動再生しない
+
+	// デフォルト値
+	SwitchSound = nullptr;
+	SoundVolume = 1.0f;
+	SoundPitch = 1.0f;
 }
 
 // Called when the game starts or when spawned
@@ -291,6 +304,8 @@ void AGimmick_Balance::CheckBalance()
 	if (bIsBalanced && !bWasBalanced)
 	{
 		bDoorOpen = true; //釣り合ったら開く
+		//SE再生
+		PlaySwitchSound();
 	}
 	else if (!bIsBalanced && bWasBalanced)
 	{
@@ -337,4 +352,21 @@ void AGimmick_Balance::MoveDoor(float DeltaTime)
 	//パーツの位置を更新
 	DoorParts1->SetRelativeLocation(NewLowerPos);
 	DoorParts2->SetRelativeLocation(NewUpperPos);
+}
+
+/// @brief 切り替え時のサウンドを再生する関数
+void AGimmick_Balance::PlaySwitchSound()
+{
+	if (!SwitchSound)
+	{
+		return;
+	}
+
+	// 方法1: 2Dサウンドとして再生（シンプル・推奨）
+	UGameplayStatics::PlaySound2D(
+		this,
+		SwitchSound,
+		SoundVolume,
+		SoundPitch
+	);
 }

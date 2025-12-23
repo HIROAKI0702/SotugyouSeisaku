@@ -9,6 +9,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "InteractWidget.h"
 #include "SwitchManager.h"
+#include "Sound/SoundBase.h"
+#include "Components/AudioComponent.h"
 
 // Sets default values
 
@@ -38,6 +40,16 @@ AGimmick_PlayerSwitch::AGimmick_PlayerSwitch()
 	//切り替え後の無効化時間
 	mPostSwitchDisableTime = 0.5f;
 	bIsTemporarilyDisabled = false;
+
+	//AudioComponentを作成
+	AudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComponent"));
+	AudioComponent->SetupAttachment(RootComponent);
+	AudioComponent->bAutoActivate = false;//自動再生しない
+
+	// デフォルト値
+	SwitchSound = nullptr;
+	SoundVolume = 1.0f;
+	SoundPitch = 1.0f;
 }
 
 // Called when the game starts or when spawned
@@ -74,6 +86,9 @@ void AGimmick_PlayerSwitch::Interact_Implementation(ASotugyouSeisakuCharacter* P
 	{
 		OnInteract(PlayerCharacter);
 	}
+
+	//SE再生
+	PlaySwitchSound();
 }
 
 /// @brief インタラクトできるかどうかをチェックする関数
@@ -326,4 +341,21 @@ void AGimmick_PlayerSwitch::PerformSwitch(ASotugyouSeisakuCharacter* NewPlayer, 
 	FTimerHandle EnableHandle;
 	GetWorld()->GetTimerManager().SetTimer(EnableHandle, this,
 		&AGimmick_PlayerSwitch::EnableSwitch, mPostSwitchDisableTime, false);
+}
+
+/// @brief 切り替え時のサウンドを再生する関数
+void AGimmick_PlayerSwitch::PlaySwitchSound()
+{
+	if (!SwitchSound)
+	{
+		return;
+	}
+
+	// 方法1: 2Dサウンドとして再生（シンプル・推奨）
+	UGameplayStatics::PlaySound2D(
+		this,
+		SwitchSound,
+		SoundVolume,
+		SoundPitch
+	);
 }

@@ -10,6 +10,8 @@ class UBoxComponent;
 class AGimmick_PushBlock;
 class ASotugyouSeisakuCharacter;
 class UTextRenderComponent;
+class USoundBase;
+class UAudioComponent;
 
 UCLASS()
 class SOTUGYOUSEISAKU_API AGimmick_Balance : public AActor
@@ -149,4 +151,23 @@ public:
 
 	//重量表示を更新する関数
 	void UpdateWeightDisplay();
+
+	//切り替え時のSE
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundBase* SwitchSound;
+
+	//SE再生用のAudioComponent（オプション）
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Audio")
+	class UAudioComponent* AudioComponent;
+
+	//SEの音量
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float SoundVolume = 1.0f;
+
+	//SEのピッチ
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio", meta = (ClampMin = "0.5", ClampMax = "2.0"))
+	float SoundPitch = 1.0f;
+
+	//SEを再生する関数
+	void PlaySwitchSound();
 };

@@ -9,6 +9,8 @@
 
 class UBoxComponent;
 class ASotugyouSeisakuCharacter;
+class USoundBase;
+class UAudioComponent;
 
 UCLASS()
 class SOTUGYOUSEISAKU_API AGimmick_PlayerSwitch : public AActor, public IInteractable
@@ -102,4 +104,23 @@ public:
 
 	//スイッチが一時的に無効化されているか
 	bool bIsTemporarilyDisabled;
+
+	//切り替え時のSE
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
+	USoundBase* SwitchSound;
+
+	//SE再生用のAudioComponent（オプション）
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Audio")
+	class UAudioComponent* AudioComponent;
+
+	//SEの音量
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float SoundVolume = 1.0f;
+
+	//SEのピッチ
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio", meta = (ClampMin = "0.5", ClampMax = "2.0"))
+	float SoundPitch = 1.0f;
+
+	//SEを再生する関数
+	void PlaySwitchSound();
 };

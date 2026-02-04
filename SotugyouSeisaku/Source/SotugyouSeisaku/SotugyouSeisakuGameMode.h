@@ -7,33 +7,42 @@
 #include "SotugyouSeisakuGameMode.generated.h"
 
 class UUserWidget;
+class USoundBase;
+class UAudioComponent;
 
-UCLASS(minimalapi)
-class ASotugyouSeisakuGameMode : public AGameModeBase
+UCLASS()
+class SOTUGYOUSEISAKU_API ASotugyouSeisakuGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
 	ASotugyouSeisakuGameMode();
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Audio")
-    USoundBase* BackgroundMusic;
+	virtual void BeginPlay() override;
 
 protected:
-    virtual void BeginPlay() override;
+	// チュートリアル用ウィジェット
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<UUserWidget> TutorialWidgetClass;
 
-    //チュートリアルウィジェットのクラス
-    UPROPERTY(EditDefaultsOnly, Category = "UI")
-    TSubclassOf<UUserWidget> TutorialWidgetClass;
+	// 生成されたウィジェット
+	UPROPERTY()
+	UUserWidget* TutorialWidgetInstance;
 
-private:
-    //作成されたウィジェットの参照
-    UPROPERTY()
-    UUserWidget* TutorialWidgetInstance;
+	// BGM
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Sound")
+	USoundBase* BackgroundMusic;
 
-    UPROPERTY()
-    UAudioComponent* BGMComponent;
+	// BGM用AudioComponent
+	UPROPERTY()
+	UAudioComponent* BGMComponent;
+
+public:
+	// BGM再生関数
+	UFUNCTION(BlueprintCallable, Category = "Sound")
+	void PlayStageBGM();
+
+	// BGM停止関数
+	UFUNCTION(BlueprintCallable, Category = "Sound")
+	void StopStageBGM();
 };
-
-
-

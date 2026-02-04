@@ -1,5 +1,4 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -11,42 +10,44 @@ class UMR_GameInstance;
 class APlayerController;
 
 /**
- * 
+ *
  */
 UCLASS()
 class SOTUGYOUSEISAKU_API UTitleScreenWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-	//スタートボタン
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> mStartButton;
-
-	//オプションボタン
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> mOptionsButton;
-
-	//終了ボタン
-	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UButton> mQuitButton;
-	
-protected:
+public:
 	virtual void NativeConstruct() override;
 
 private:
+	//ゲーム開始ボタン
+	UPROPERTY(meta = (BindWidget))
+	UButton* mStartButton;
 
-	//スタートボタンの押下チェック関数
+	//ゲーム終了ボタン
+	UPROPERTY(meta = (BindWidget))
+	UButton* mQuitButton;
+
+	//GameInstance参照
+	UPROPERTY()
+	UMR_GameInstance* mGameInstance;
+
+	//PlayerController参照
+	UPROPERTY()
+	APlayerController* mPlayerController;
+
+	//ボタンクリックイベント
 	UFUNCTION()
 	void OnStartButtonClicked();
 
-	//設定ボタンの押下チェック関数
-	UFUNCTION()
-	void OnOptionsButtonClicked();
-
-	//ゲーム終了の押下チェック関数
 	UFUNCTION()
 	void OnQuitButtonClicked();
 
-	TObjectPtr<UMR_GameInstance> mGameInstance;
-	TObjectPtr<APlayerController> mPlayerController;
+	//SE再生関数
+	void PlayButtonClickSound();
+
+	//タイマーハンドル
+	FTimerHandle StageLoadTimerHandle;
+	FTimerHandle QuitTimerHandle;
 };

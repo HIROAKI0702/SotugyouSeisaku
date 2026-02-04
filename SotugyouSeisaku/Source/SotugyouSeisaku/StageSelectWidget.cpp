@@ -6,6 +6,7 @@
 #include "MR_GameInstance.h"
 #include "Kismet/GameplayStatics.h"
 #include "Blueprint/WidgetTree.h"
+#include "GMB_StageSelectScreen.h"
 
 /// @brief コンストラクタ　初期設定と各ボタンのバインド
 void UStageSelectWidget::NativeConstruct()
@@ -33,14 +34,6 @@ void UStageSelectWidget::NativeConstruct()
 	if (mStageButtons.IsValidIndex(0) && mStageButtons[0])
 	{
 		mStageButtons[0]->OnClicked.AddDynamic(this, &UStageSelectWidget::OnStage0ButtonClicked);
-	}
-	if (mStageButtons.IsValidIndex(1) && mStageButtons[1])
-	{
-		mStageButtons[1]->OnClicked.AddDynamic(this, &UStageSelectWidget::OnStage1ButtonClicked);
-	}
-	if (mStageButtons.IsValidIndex(2) && mStageButtons[2])
-	{
-		mStageButtons[2]->OnClicked.AddDynamic(this, &UStageSelectWidget::OnStage2ButtonClicked);
 	}
 
 	//ステージボタンの状態を更新
@@ -102,53 +95,56 @@ void UStageSelectWidget::FindStageButtons()
 	UE_LOG(LogTemp, Log, TEXT("Total stage buttons found: %d"), mStageButtons.Num());
 }
 
+/// @brief GameModeのSE再生関数を呼び出す
+void UStageSelectWidget::PlayButtonClickSound()
+{
+	AGMB_StageSelectScreen* GameMode = Cast<AGMB_StageSelectScreen>(GetWorld()->GetAuthGameMode());
+	if (GameMode)
+	{
+		GameMode->PlayUIClickSound();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to get GameMode!"));
+	}
+}
+
 /// @brief 戻るボタンの関数
 void UStageSelectWidget::OnBackButtonClicked()
 {
 	UE_LOG(LogTemp, Log, TEXT("Back button clicked"));
 
-	if (mGameInstance)
-	{
-		mGameInstance->ReturnToTitle();
-	}
+	PlayButtonClickSound();
+
+	// SE の再生時間分、遅延してからレベル遷移
+	GetWorld()->GetTimerManager().SetTimer(
+		StageLoadTimerHandle,
+		[this]()
+		{
+			if (mGameInstance)mGameInstance->ReturnToTitle();
+
+		},
+		0.5f,  // 0.5秒待機（SE の長さに合わせて調整）
+		false
+	);
 }
 
 /// @brief ステージ１に遷移する関数
 void UStageSelectWidget::OnStage0ButtonClicked()
 {
-	if (mGameInstance) mGameInstance->LoadStage(0);
+	PlayButtonClickSound();
 
-	//レベル遷移前に入力モードを戻す
-	APlayerController* PC = GetOwningPlayer();
-	if (PC)
-	{
-		FInputModeGameOnly InputMode;
-		PC->SetInputMode(InputMode);
-		PC->bShowMouseCursor = false;
-	}
-}
+	// SE の再生時間分、遅延してからレベル遷移
+	GetWorld()->GetTimerManager().SetTimer(
+		StageLoadTimerHandle,
+		[this]()
+		{
+			if (mGameInstance) mGameInstance->LoadStage(0);
+		},
+		0.5f,  // 0.5秒待機（SE の長さに合わせて調整）
+		false
+	);
 
-/// @brief ステージ2に遷移する関数
-void UStageSelectWidget::OnStage1ButtonClicked()
-{
-	if (mGameInstance) mGameInstance->LoadStage(1);
-
-	//レベル遷移前に入力モードを戻す
-	APlayerController* PC = GetOwningPlayer();
-	if (PC)
-	{
-		FInputModeGameOnly InputMode;
-		PC->SetInputMode(InputMode);
-		PC->bShowMouseCursor = false;
-	}
-}
-
-/// @brief ステージ3に遷移する関数
-void UStageSelectWidget::OnStage2ButtonClicked()
-{
-	if (mGameInstance) mGameInstance->LoadStage(2);
-
-	//レベル遷移前に入力モードを戻す
 	APlayerController* PC = GetOwningPlayer();
 	if (PC)
 	{

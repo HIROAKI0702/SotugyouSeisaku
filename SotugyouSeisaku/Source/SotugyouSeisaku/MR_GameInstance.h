@@ -6,69 +6,77 @@
 #include "Engine/GameInstance.h"
 #include "MR_GameInstance.generated.h"
 
-//ステージ情報の構造体
+// ステージ情報を格納する構造体
 USTRUCT(BlueprintType)
 struct FStageInfo
 {
 	GENERATED_BODY()
 
-	//ステージ名
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FString mStageName;
 
-	//ステージのレベル名（マップファイル名）
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FName mLevelName;
 
-	//ステージのサムネイル画像
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UTexture2D> mThumbnailImage;
+	class UTexture2D* mThumbnailImage;
 
-	//ステージがクリア済みか
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsCleared = false;
 
-	//ステージがアンロックされているか
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bIsUnlocked = false;
 };
 
-/**
- * 
- */
 UCLASS()
 class SOTUGYOUSEISAKU_API UMR_GameInstance : public UGameInstance
 {
 	GENERATED_BODY()
-	
+
 public:
 	UMR_GameInstance();
 
-	//ステージ一覧
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Stages")
+	// ステージ情報の配列
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stage")
 	TArray<FStageInfo> mStages;
 
-	//現在選択されているステージインデックス
-	UPROPERTY(BlueprintReadWrite, Category = "Stages")
-	int32 mCurrentStageIndex = 0;
+	// 現在のステージインデックス
+	UPROPERTY(BlueprintReadWrite, Category = "Stage")
+	int32 mCurrentStageIndex;
 
-	//ステージをアンロック
-	UFUNCTION(BlueprintCallable, Category = "Stages")
+	// 現在のチェックポイント
+	UPROPERTY(BlueprintReadWrite, Category = "CheckPoint")
+	int32 mCurrentCheckPoint;
+
+	// ステージをアンロック
+	UFUNCTION(BlueprintCallable, Category = "Stage")
 	void UnlockStage(int32 StageIndex);
 
-	//ステージをクリア済みにする
-	UFUNCTION(BlueprintCallable, Category = "Stages")
+	// ステージをクリア状態にする
+	UFUNCTION(BlueprintCallable, Category = "Stage")
 	void SetStageCleared(int32 StageIndex);
 
-	//ステージをロード
-	UFUNCTION(BlueprintCallable, Category = "Stages")
+	// 指定したステージをロード
+	UFUNCTION(BlueprintCallable, Category = "Stage")
 	void LoadStage(int32 StageIndex);
 
-	//タイトル画面に戻る
-	UFUNCTION(BlueprintCallable, Category = "Stages")
+	// タイトル画面に戻る
+	UFUNCTION(BlueprintCallable, Category = "Stage")
 	void ReturnToTitle();
 
-	//ステージ選択画面に戻る
-	UFUNCTION(BlueprintCallable, Category = "Stages")
+	// ステージ選択画面に戻る
+	UFUNCTION(BlueprintCallable, Category = "Stage")
 	void ReturnToStageSelect();
+
+	// チェックポイントを設定
+	UFUNCTION(BlueprintCallable, Category = "CheckPoint")
+	void SetCurrentCheckPoint(int32 CheckPointIndex);
+
+	// チェックポイントを取得
+	UFUNCTION(BlueprintCallable, Category = "CheckPoint")
+	int32 GetCurrentCheckPoint() const { return mCurrentCheckPoint; }
+
+	// チェックポイントからリスポーン
+	UFUNCTION(BlueprintCallable, Category = "CheckPoint")
+	void RespawnAtCheckPoint();
 };
